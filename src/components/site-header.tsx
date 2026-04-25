@@ -1,10 +1,10 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { useAuth } from "@/lib/auth-context";
+import { useStudent } from "@/lib/student-context";
 import { Button } from "@/components/ui/button";
 import logo from "@/assets/logo-phoenix.png";
 
 export function SiteHeader() {
-  const { user, signOut } = useAuth();
+  const { student, signOut } = useStudent();
   const navigate = useNavigate();
 
   return (
@@ -21,13 +21,21 @@ export function SiteHeader() {
           <Link to="/" className="px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground" activeOptions={{ exact: true }} activeProps={{ className: "px-3 py-1.5 text-sm text-foreground font-medium" }}>首页</Link>
           <Link to="/practice" className="px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground" activeProps={{ className: "px-3 py-1.5 text-sm text-foreground font-medium" }}>词汇练习</Link>
           <Link to="/dashboard" className="px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground" activeProps={{ className: "px-3 py-1.5 text-sm text-foreground font-medium" }}>我的打卡</Link>
+          <Link to="/ranking" className="px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground" activeProps={{ className: "px-3 py-1.5 text-sm text-foreground font-medium" }}>🏆 封神榜</Link>
           <Link to="/coaches" className="px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground" activeProps={{ className: "px-3 py-1.5 text-sm text-foreground font-medium" }}>教练团</Link>
         </nav>
         <div className="flex items-center gap-2">
-          {user ? (
-            <Button variant="outline" size="sm" onClick={async () => { await signOut(); navigate({ to: "/" }); }}>退出</Button>
+          {student ? (
+            <>
+              <span className="hidden sm:block text-xs text-muted-foreground">
+                {student.name} · {student.district}
+              </span>
+              <Button variant="outline" size="sm" onClick={() => { signOut(); navigate({ to: "/" }); }}>退出</Button>
+            </>
           ) : (
-            <Button size="sm" onClick={() => navigate({ to: "/auth" })} className="bg-gradient-to-r from-primary to-[oklch(0.72_0.20_300)] hover:opacity-90">登录 / 注册</Button>
+            <Button size="sm" onClick={() => navigate({ to: "/join" })} className="bg-gradient-to-r from-primary to-[oklch(0.72_0.20_300)] hover:opacity-90">
+              加入打卡
+            </Button>
           )}
         </div>
       </div>
