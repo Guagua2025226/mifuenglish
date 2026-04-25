@@ -333,3 +333,70 @@ function Row({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
+
+function StudyCard({ word, onResult }: { word: Word; onResult: (correct: boolean) => void }) {
+  const [showMeaning, setShowMeaning] = useState(false);
+
+  useEffect(() => {
+    setShowMeaning(false);
+    const t = setTimeout(() => speakWord(word.word), 250);
+    return () => clearTimeout(t);
+  }, [word.id]);
+
+  const rate = (level: "unknown" | "fuzzy" | "known" | "mastered") => {
+    onResult(level !== "unknown");
+  };
+
+  const levels = [
+    { id: "unknown", label: "不会", days: "+明天", cls: "bg-destructive/15 hover:bg-destructive/25 border-destructive/40 text-destructive-foreground", labelCls: "text-destructive" },
+    { id: "fuzzy", label: "模糊", days: "+2 天", cls: "bg-gold/15 hover:bg-gold/25 border-gold/40", labelCls: "text-gold" },
+    { id: "known", label: "认识", days: "+4 天", cls: "bg-success/15 hover:bg-success/25 border-success/40", labelCls: "text-success" },
+    { id: "mastered", label: "掌握", days: "+7 天", cls: "bg-success/30 hover:bg-success/40 border-success/60", labelCls: "text-success" },
+  ] as const;
+
+  return (
+    <>
+      <div className="glass-card rounded-3xl p-10 md:p-14 text-center min-h-[280px] flex flex-col items-center justify-center">
+        <div className="inline-flex items-center gap-1 text-xs px-3 py-1 rounded-full bg-gold/20 text-gold mb-6">
+          ✨ 新词
+        </div>
+        <div className="flex items-center gap-4">
+          <div className="text-5xl md:text-6xl font-extrabold tracking-tight">{word.word}</div>
+          <button
+            onClick={() => speakWord(word.word)}
+            aria-label="发音"
+            className="h-12 w-12 rounded-full bg-success/20 hover:bg-success/30 flex items-center justify-center text-success transition"
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+          </button>
+        </div>
+        {word.pos && <div className="mt-2 text-sm text-muted-foreground">{word.pos}</div>}
+
+        {!showMeaning ? (
+          <Button variant="outline" className="mt-8" onClick={() => setShowMeaning(true)}>
+            👁  显示释义
+          </Button>
+        ) : (
+          <div className="mt-6 text-2xl md:text-3xl font-semibold text-gradient-gold max-w-xl">
+            {word.meaning}
+          </div>
+        )}
+      </div>
+
+      <div className="mt-3 text-center text-xs text-muted-foreground">想想看再点显示释义</div>
+
+      <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3">
+        {levels.map((lv) => (
+          <button
+            key={lv.id}
+            onClick={() => rate(lv.id)}
+            className={`rounded-2xl border-2 py-4 transition ${lv.cls}`}
+          >
+            <div className={`text-lg font-bold ${lv.labelCls}`}>{lv.label}</div>
+            <div className={`text-xs mt-0.5 ${lv.labelCls} opacity-80`}>{lv.days}</div>
+          </button>
+        ))}
+      </div>
+    </>
+  );
+}
