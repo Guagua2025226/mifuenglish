@@ -36,10 +36,15 @@ function Index() {
           </p>
           <p className="mt-2 text-sm text-muted-foreground">为不教而教 · 为自学而学</p>
           <div className="mt-8 flex justify-center gap-3 flex-wrap">
-            <Link to="/join"><Button size="lg" className="bg-gradient-to-r from-[oklch(0.82_0.14_85)] to-[oklch(0.72_0.16_70)] text-[oklch(0.20_0.05_290)] font-bold hover:opacity-90">加入打卡（免注册）</Button></Link>
+            <Link to="/coaches" search={{ select: true }}>
+              <Button size="lg" className="bg-gradient-to-r from-[oklch(0.82_0.14_85)] to-[oklch(0.72_0.16_70)] text-[oklch(0.20_0.05_290)] font-bold hover:opacity-90">
+                ✨ 立即体验 · 选教练
+              </Button>
+            </Link>
+            <Link to="/join"><Button size="lg" variant="outline">加入打卡（免注册）</Button></Link>
             <Link to="/ranking"><Button size="lg" variant="outline">🏆 查看封神榜</Button></Link>
           </div>
-          <p className="mt-3 text-xs text-muted-foreground">输入姓名 · 年级 · 北京区域，立即上榜</p>
+          <p className="mt-3 text-xs text-muted-foreground">家长报名 1V1 试听 · 学生免注册打卡上榜</p>
         </div>
       </section>
 
