@@ -1,61 +1,39 @@
-import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
-
+import { Outlet, createRootRouteWithContext, HeadContent, Scripts } from "@tanstack/react-router";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import appCss from "../styles.css?url";
+import { AuthProvider } from "@/lib/auth-context";
+import { SiteHeader } from "@/components/site-header";
+import { Toaster } from "@/components/ui/sonner";
 
-function NotFoundComponent() {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="max-w-md text-center">
-        <h1 className="text-7xl font-bold text-foreground">404</h1>
-        <h2 className="mt-4 text-xl font-semibold text-foreground">Page not found</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          The page you're looking for doesn't exist or has been moved.
-        </p>
-        <div className="mt-6">
-          <Link
-            to="/"
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-          >
-            Go home
-          </Link>
-        </div>
-      </div>
-    </div>
-  );
-}
+interface RouterContext { queryClient: QueryClient }
 
-export const Route = createRootRoute({
+export const Route = createRootRouteWithContext<RouterContext>()({
   head: () => ({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-      { name: "twitter:site", content: "@Lovable" },
+      { title: "米赋AI教育 — AI+教练 双师系统创导者" },
+      { name: "description", content: "米赋AI教育 · 中考前词汇冲刺打卡，结合AI出题与名师教练，覆盖中翻英、英翻中、词性转换、词根词缀、固定搭配、语法填空与单词翻翻乐。" },
     ],
-    links: [
-      {
-        rel: "stylesheet",
-        href: appCss,
-      },
-    ],
+    links: [{ rel: "stylesheet", href: appCss }],
   }),
   shellComponent: RootShell,
   component: RootComponent,
-  notFoundComponent: NotFoundComponent,
+  notFoundComponent: () => (
+    <div className="flex min-h-screen items-center justify-center px-4">
+      <div className="glass-card rounded-2xl p-10 text-center">
+        <h1 className="text-6xl font-bold text-gradient-gold">404</h1>
+        <p className="mt-3 text-muted-foreground">页面未找到</p>
+        <a href="/" className="mt-6 inline-block rounded-md bg-primary px-4 py-2 text-sm">返回首页</a>
+      </div>
+    </div>
+  ),
 });
 
 function RootShell({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <head>
-        <HeadContent />
-      </head>
+    <html lang="zh-CN">
+      <head><HeadContent /></head>
       <body>
         {children}
         <Scripts />
@@ -65,5 +43,19 @@ function RootShell({ children }: { children: React.ReactNode }) {
 }
 
 function RootComponent() {
-  return <Outlet />;
+  const { queryClient } = Route.useRouteContext();
+  return (
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <div className="min-h-screen flex flex-col">
+          <SiteHeader />
+          <main className="flex-1"><Outlet /></main>
+          <footer className="mt-16 border-t border-border py-6 text-center text-xs text-muted-foreground">
+            © 北京米赋教育科技有限公司 · 米赋AI教育 · AI+教练 双师系统创导者
+          </footer>
+        </div>
+        <Toaster />
+      </AuthProvider>
+    </QueryClientProvider>
+  );
 }
