@@ -1,94 +1,103 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useStudent } from "@/lib/student-context";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { generateAIQuestion } from "@/lib/ai.functions";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
+import { VOCAB_GROUPS, type VocabWord } from "@/lib/word-groups";
+import { PRACTICE_MODES, markModeDone, getGroupProgress, type ModeId } from "@/lib/practice-progress";
 
-export const Route = createFileRoute("/practice/$mode")({
+export const Route = createFileRoute("/practice/$groupId/$mode")({
   component: PracticeMode,
 });
 
-interface Word { id: string; word: string; meaning: string; pos: string | null }
-
-const MODE_NAMES: Record<string, string> = {
-  study: "学习打卡", cn2en: "中翻英", en2cn: "英翻中", match: "单词翻翻乐",
-  pos: "词性转换", root: "词根词缀", collocation: "固定搭配", cloze: "语法填空",
-};
+const MODE_NAME = (id: string) => PRACTICE_MODES.find((m) => m.id === id)?.name ?? id;
 
 function speakWord(w: string) {
   if (typeof window === "undefined" || !window.speechSynthesis) return;
   const u = new SpeechSynthesisUtterance(w);
-  u.lang = "en-US";
-  u.rate = 0.9;
+  u.lang = "en-US"; u.rate = 0.9;
   window.speechSynthesis.cancel();
   window.speechSynthesis.speak(u);
 }
 
 function PracticeMode() {
-  const { mode } = Route.useParams();
+  const { groupId, mode } = Route.useParams();
   const { student, loading: authLoading } = useStudent();
   const navigate = useNavigate();
-  const [words, setWords] = useState<Word[]>([]);
+  const groupIdNum = Number(groupId);
+  const group = VOCAB_GROUPS.find((g) => g.id === groupIdNum);
+
   const [idx, setIdx] = useState(0);
   const [studied, setStudied] = useState(0);
   const [correctCount, setCorrectCount] = useState(0);
   const savedRef = useRef(false);
 
   useEffect(() => { if (!authLoading && !student) navigate({ to: "/join" }); }, [student, authLoading, navigate]);
+  useEffect(() => { setIdx(0); setStudied(0); setCorrectCount(0); savedRef.current = false; }, [mode, groupId]);
 
-  useEffect(() => {
-    (async () => {
-      const { data } = await supabase.from("vocabulary").select("*").limit(500);
-      const shuffled = [...(data ?? [])].sort(() => Math.random() - 0.5).slice(0, 20);
-      setWords(shuffled as Word[]);
-      setIdx(0); setStudied(0); setCorrectCount(0);
-      savedRef.current = false;
-    })();
-  }, [mode]);
-
-  const recordResult = useCallback((_word: Word, correct: boolean) => {
+  const recordResult = useCallback((correct: boolean) => {
     setStudied((s) => s + 1);
     if (correct) setCorrectCount((c) => c + 1);
   }, []);
 
   const next = () => setIdx((i) => i + 1);
 
-  // Save session to study_logs once when finished
-  useEffect(() => {
-    if (!student || words.length === 0) return;
-    if (idx < words.length) return;
-    if (savedRef.current || studied === 0) return;
-    savedRef.current = true;
-    const score = studied > 0 ? Math.round((correctCount / studied) * 100) : 0;
-    supabase.from("study_logs").insert({
-      student_id: student.id,
-      mode,
-      words_studied: studied,
-      correct_count: correctCount,
-      score,
-    }).then(({ error }) => {
-      if (error) toast.error("打卡保存失败");
-      else toast.success(`打卡成功！+${studied} 词`);
-    });
-  }, [idx, words.length, studied, correctCount, student, mode]);
+  if (!student) return null;
+  if (!group) {
+    return (
+      <div className="p-12 text-center">
+        <p className="text-muted-foreground">未找到该词组</p>
+        <Link to="/practice"><Button className="mt-4">返回练习中心</Button></Link>
+      </div>
+    );
+  }
 
-  if (!student || words.length === 0) return <div className="p-12 text-center text-muted-foreground">加载中...</div>;
+  const words = group.words;
+
   if (idx >= words.length) {
     const score = studied > 0 ? Math.round((correctCount / studied) * 100) : 0;
+    // mark this mode done
+    if (!savedRef.current && studied > 0) {
+      savedRef.current = true;
+      const gp = markModeDone(groupIdNum, mode as ModeId);
+      if (gp.checkedInAt && gp.modes && Object.keys(gp.modes).length === PRACTICE_MODES.length) {
+        toast.success(`🎉 ${group.name} 全部完成，已打卡！`);
+      } else {
+        toast.success(`✓ ${MODE_NAME(mode)} 完成`);
+      }
+    }
+    const gp = getGroupProgress(groupIdNum);
+    const nextUndone = PRACTICE_MODES.find((m) => !gp.modes[m.id]);
+    const allDone = !nextUndone;
+
     return (
       <div className="mx-auto max-w-xl px-4 py-12 text-center">
         <div className="glass-card rounded-2xl p-8">
-          <div className="text-5xl mb-3">🎉</div>
-          <h2 className="text-2xl font-bold text-gradient-gold">本轮完成！</h2>
+          <div className="text-5xl mb-3">{allDone ? "🏆" : "✅"}</div>
+          <h2 className="text-2xl font-bold text-gradient-gold">
+            {allDone ? `${group.name} 全部完成！打卡成功` : `${MODE_NAME(mode)} 完成`}
+          </h2>
           <p className="mt-2 text-muted-foreground">练习 {studied} 词 · 正确 {correctCount} · 得分 {score}</p>
-          <div className="mt-6 flex gap-3 justify-center flex-wrap">
-            <Button onClick={() => { setIdx(0); setStudied(0); setCorrectCount(0); savedRef.current = false; }}>再来一轮</Button>
-            <Link to="/dashboard"><Button variant="outline">我的打卡</Button></Link>
-            <Link to="/ranking"><Button variant="outline">🏆 封神榜</Button></Link>
+
+          <div className="mt-4 flex flex-wrap gap-1.5 justify-center">
+            {PRACTICE_MODES.map((m) => (
+              <span key={m.id} className={`text-xs px-2 py-1 rounded-full border ${
+                gp.modes[m.id] ? "bg-success/20 border-success/40 text-success" : "bg-card/40 border-border/60 text-muted-foreground"
+              }`}>{m.icon} {m.name}</span>
+            ))}
+          </div>
+
+          <div className="mt-6 flex gap-2 justify-center flex-wrap">
+            {nextUndone && (
+              <Button onClick={() => navigate({ to: "/practice/$groupId/$mode", params: { groupId, mode: nextUndone.id } })}>
+                下一环节：{nextUndone.icon} {nextUndone.name} →
+              </Button>
+            )}
+            <Link to="/practice"><Button variant="outline">返回练习中心</Button></Link>
+            {allDone && <Link to="/ranking"><Button variant="outline">🏆 封神榜</Button></Link>}
           </div>
         </div>
       </div>
@@ -100,26 +109,27 @@ function PracticeMode() {
     <div className="mx-auto max-w-2xl px-4 py-8">
       <div className="mb-3 flex items-center gap-3">
         <Link to="/practice" className="text-sm text-muted-foreground hover:text-foreground shrink-0">← 返回</Link>
-        <Progress value={((idx) / words.length) * 100} className="flex-1 h-2" />
+        <Progress value={(idx / words.length) * 100} className="flex-1 h-2" />
         <div className="text-sm text-muted-foreground shrink-0 tabular-nums">{idx + 1} / {words.length}</div>
       </div>
-      <div className="text-xs text-muted-foreground mb-3 text-center">{MODE_NAMES[mode] ?? mode}</div>
+      <div className="text-xs text-muted-foreground mb-3 text-center">{group.name} · {MODE_NAME(mode)}</div>
       <div className={mode === "study" ? "" : "glass-card rounded-2xl p-6 md:p-8"}>
-        {mode === "study" && <StudyCard word={current} onResult={(c: boolean) => { recordResult(current, c); next(); }} />}
-        {mode === "cn2en" && <Cn2En word={current} onResult={(c) => { recordResult(current, c); next(); }} />}
-        {mode === "en2cn" && <En2Cn word={current} pool={words} onResult={(c) => { recordResult(current, c); next(); }} />}
-        {mode === "match" && <MatchGame pool={words.slice(0, 6)} onDone={() => { recordResult(current, true); next(); }} />}
+        {mode === "study" && <StudyCard word={current} onResult={(c) => { recordResult(c); next(); }} />}
+        {mode === "cn2en" && <Cn2En word={current} onResult={(c) => { recordResult(c); next(); }} />}
+        {mode === "en2cn" && <En2Cn word={current} pool={words} onResult={(c) => { recordResult(c); next(); }} />}
+        {mode === "match" && <MatchGame pool={words.slice(0, 6)} onDone={() => { recordResult(true); setIdx(words.length); }} />}
         {(mode === "pos" || mode === "root" || mode === "collocation" || mode === "cloze") && (
-          <AIQuestion word={current} mode={mode} onResult={(c) => { recordResult(current, c); next(); }} />
+          <AIQuestion word={current} mode={mode} onResult={(c) => { recordResult(c); next(); }} />
         )}
       </div>
     </div>
   );
 }
 
-function Cn2En({ word, onResult }: { word: Word; onResult: (c: boolean) => void }) {
+function Cn2En({ word, onResult }: { word: VocabWord; onResult: (c: boolean) => void }) {
   const [val, setVal] = useState("");
   const [showAns, setShowAns] = useState(false);
+  useEffect(() => { setVal(""); setShowAns(false); }, [word.word]);
   return (
     <>
       <div className="text-sm text-muted-foreground mb-2">看中文写英文</div>
@@ -146,23 +156,24 @@ function Cn2En({ word, onResult }: { word: Word; onResult: (c: boolean) => void 
   );
 }
 
-function En2Cn({ word, pool, onResult }: { word: Word; pool: Word[]; onResult: (c: boolean) => void }) {
+function En2Cn({ word, pool, onResult }: { word: VocabWord; pool: VocabWord[]; onResult: (c: boolean) => void }) {
   const [picked, setPicked] = useState<string | null>(null);
-  const [opts] = useState(() => {
-    const distractors = pool.filter((w) => w.id !== word.id).sort(() => Math.random() - 0.5).slice(0, 3);
-    return [...distractors, word].sort(() => Math.random() - 0.5);
-  });
+  const [opts, setOpts] = useState<VocabWord[]>([]);
+  useEffect(() => {
+    const distractors = pool.filter((w) => w.word !== word.word).sort(() => Math.random() - 0.5).slice(0, 3);
+    setOpts([...distractors, word].sort(() => Math.random() - 0.5));
+    setPicked(null);
+  }, [word.word, pool]);
   return (
     <>
       <div className="text-sm text-muted-foreground mb-2">选择正确的中文释义</div>
-      <div className="text-4xl md:text-5xl font-bold mb-2 text-gradient-gold">{word.word}</div>
-      {word.pos && <div className="text-sm text-muted-foreground mb-6">{word.pos}</div>}
+      <div className="text-4xl md:text-5xl font-bold mb-6 text-gradient-gold">{word.word}</div>
       <div className="space-y-2">
         {opts.map((o) => {
-          const correct = o.id === word.id;
-          const isPicked = picked === o.id;
+          const correct = o.word === word.word;
+          const isPicked = picked === o.word;
           return (
-            <button key={o.id} disabled={!!picked} onClick={() => setPicked(o.id)}
+            <button key={o.word} disabled={!!picked} onClick={() => setPicked(o.word)}
               className={`w-full text-left p-3 rounded-lg border transition ${
                 picked
                   ? correct ? "bg-success/20 border-success" : isPicked ? "bg-destructive/20 border-destructive" : "bg-card/30 border-border"
@@ -171,20 +182,18 @@ function En2Cn({ word, pool, onResult }: { word: Word; pool: Word[]; onResult: (
           );
         })}
       </div>
-      {picked && (
-        <Button className="w-full mt-4" onClick={() => onResult(picked === word.id)}>下一题</Button>
-      )}
+      {picked && <Button className="w-full mt-4" onClick={() => onResult(picked === word.word)}>下一题</Button>}
     </>
   );
 }
 
-function MatchGame({ pool, onDone }: { pool: Word[]; onDone: () => void }) {
+function MatchGame({ pool, onDone }: { pool: VocabWord[]; onDone: () => void }) {
   type Card = { key: string; id: string; text: string; kind: "en" | "cn" };
   const [cards] = useState<Card[]>(() => {
     const arr: Card[] = [];
     pool.forEach((w) => {
-      arr.push({ key: `${w.id}-en`, id: w.id, text: w.word, kind: "en" });
-      arr.push({ key: `${w.id}-cn`, id: w.id, text: w.meaning, kind: "cn" });
+      arr.push({ key: `${w.word}-en`, id: w.word, text: w.word, kind: "en" });
+      arr.push({ key: `${w.word}-cn`, id: w.word, text: w.meaning, kind: "cn" });
     });
     return arr.sort(() => Math.random() - 0.5);
   });
@@ -219,9 +228,7 @@ function MatchGame({ pool, onDone }: { pool: Word[]; onDone: () => void }) {
                 matched.has(c.key) ? "bg-success/20 border border-success text-success-foreground"
                 : isOpen ? "bg-primary/40 border border-primary"
                 : "bg-card/60 border border-border hover:bg-card/80"
-              }`}>
-              {isOpen ? c.text : "?"}
-            </button>
+              }`}>{isOpen ? c.text : "?"}</button>
           );
         })}
       </div>
@@ -229,7 +236,7 @@ function MatchGame({ pool, onDone }: { pool: Word[]; onDone: () => void }) {
   );
 }
 
-function AIQuestion({ word, mode, onResult }: { word: Word; mode: string; onResult: (c: boolean) => void }) {
+function AIQuestion({ word, mode, onResult }: { word: VocabWord; mode: string; onResult: (c: boolean) => void }) {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [reveal, setReveal] = useState(false);
@@ -238,13 +245,10 @@ function AIQuestion({ word, mode, onResult }: { word: Word; mode: string; onResu
   useEffect(() => {
     setLoading(true); setReveal(false); setAnswer(""); setData(null);
     generateAIQuestion({ data: { word: word.word, meaning: word.meaning, mode } })
-      .then((r) => {
-        if (r.error) toast.error(r.error);
-        setData(r.data);
-      })
+      .then((r) => { if (r.error) toast.error(r.error); setData(r.data); })
       .catch((e) => toast.error(e.message))
       .finally(() => setLoading(false));
-  }, [word.id, mode]);
+  }, [word.word, mode]);
 
   if (loading) return <div className="py-8 text-center text-muted-foreground">AI 正在为「{word.word}」出题...</div>;
   if (!data) return <Button onClick={() => onResult(false)}>跳过</Button>;
@@ -297,7 +301,6 @@ function AIQuestion({ word, mode, onResult }: { word: Word; mode: string; onResu
     );
   }
 
-  // pos / cloze (fill in the blank)
   const text = data.passage || data.question;
   return (
     <>
@@ -334,21 +337,18 @@ function Row({ label, value }: { label: string; value: string }) {
   );
 }
 
-function StudyCard({ word, onResult }: { word: Word; onResult: (correct: boolean) => void }) {
+function StudyCard({ word, onResult }: { word: VocabWord; onResult: (correct: boolean) => void }) {
   const [showMeaning, setShowMeaning] = useState(false);
-
   useEffect(() => {
     setShowMeaning(false);
     const t = setTimeout(() => speakWord(word.word), 250);
     return () => clearTimeout(t);
-  }, [word.id]);
+  }, [word.word]);
 
-  const rate = (level: "unknown" | "fuzzy" | "known" | "mastered") => {
-    onResult(level !== "unknown");
-  };
+  const rate = (level: "unknown" | "fuzzy" | "known" | "mastered") => onResult(level !== "unknown");
 
   const levels = [
-    { id: "unknown", label: "不会", days: "+明天", cls: "bg-destructive/15 hover:bg-destructive/25 border-destructive/40 text-destructive-foreground", labelCls: "text-destructive" },
+    { id: "unknown", label: "不会", days: "+明天", cls: "bg-destructive/15 hover:bg-destructive/25 border-destructive/40", labelCls: "text-destructive" },
     { id: "fuzzy", label: "模糊", days: "+2 天", cls: "bg-gold/15 hover:bg-gold/25 border-gold/40", labelCls: "text-gold" },
     { id: "known", label: "认识", days: "+4 天", cls: "bg-success/15 hover:bg-success/25 border-success/40", labelCls: "text-success" },
     { id: "mastered", label: "掌握", days: "+7 天", cls: "bg-success/30 hover:bg-success/40 border-success/60", labelCls: "text-success" },
@@ -357,41 +357,24 @@ function StudyCard({ word, onResult }: { word: Word; onResult: (correct: boolean
   return (
     <>
       <div className="glass-card rounded-3xl p-10 md:p-14 text-center min-h-[280px] flex flex-col items-center justify-center">
-        <div className="inline-flex items-center gap-1 text-xs px-3 py-1 rounded-full bg-gold/20 text-gold mb-6">
-          ✨ 新词
-        </div>
+        <div className="inline-flex items-center gap-1 text-xs px-3 py-1 rounded-full bg-gold/20 text-gold mb-6">✨ 新词</div>
         <div className="flex items-center gap-4">
           <div className="text-5xl md:text-6xl font-extrabold tracking-tight">{word.word}</div>
-          <button
-            onClick={() => speakWord(word.word)}
-            aria-label="发音"
-            className="h-12 w-12 rounded-full bg-success/20 hover:bg-success/30 flex items-center justify-center text-success transition"
-          >
+          <button onClick={() => speakWord(word.word)} aria-label="发音"
+            className="h-12 w-12 rounded-full bg-success/20 hover:bg-success/30 flex items-center justify-center text-success transition">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
           </button>
         </div>
-        {word.pos && <div className="mt-2 text-sm text-muted-foreground">{word.pos}</div>}
-
         {!showMeaning ? (
-          <Button variant="outline" className="mt-8" onClick={() => setShowMeaning(true)}>
-            👁  显示释义
-          </Button>
+          <Button variant="outline" className="mt-8" onClick={() => setShowMeaning(true)}>👁  显示释义</Button>
         ) : (
-          <div className="mt-6 text-2xl md:text-3xl font-semibold text-gradient-gold max-w-xl">
-            {word.meaning}
-          </div>
+          <div className="mt-6 text-2xl md:text-3xl font-semibold text-gradient-gold max-w-xl">{word.meaning}</div>
         )}
       </div>
-
       <div className="mt-3 text-center text-xs text-muted-foreground">想想看再点显示释义</div>
-
       <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3">
         {levels.map((lv) => (
-          <button
-            key={lv.id}
-            onClick={() => rate(lv.id)}
-            className={`rounded-2xl border-2 py-4 transition ${lv.cls}`}
-          >
+          <button key={lv.id} onClick={() => rate(lv.id)} className={`rounded-2xl border-2 py-4 transition ${lv.cls}`}>
             <div className={`text-lg font-bold ${lv.labelCls}`}>{lv.label}</div>
             <div className={`text-xs mt-0.5 ${lv.labelCls} opacity-80`}>{lv.days}</div>
           </button>

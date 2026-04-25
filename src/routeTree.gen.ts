@@ -17,7 +17,7 @@ import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CoachesRouteImport } from './routes/coaches'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PracticeIndexRouteImport } from './routes/practice.index'
-import { Route as PracticeModeRouteImport } from './routes/practice.$mode'
+import { Route as PracticeGroupIdModeRouteImport } from './routes/practice.$groupId.$mode'
 
 const SalesRoute = SalesRouteImport.update({
   id: '/sales',
@@ -59,9 +59,9 @@ const PracticeIndexRoute = PracticeIndexRouteImport.update({
   path: '/',
   getParentRoute: () => PracticeRoute,
 } as any)
-const PracticeModeRoute = PracticeModeRouteImport.update({
-  id: '/$mode',
-  path: '/$mode',
+const PracticeGroupIdModeRoute = PracticeGroupIdModeRouteImport.update({
+  id: '/$groupId/$mode',
+  path: '/$groupId/$mode',
   getParentRoute: () => PracticeRoute,
 } as any)
 
@@ -73,8 +73,8 @@ export interface FileRoutesByFullPath {
   '/practice': typeof PracticeRouteWithChildren
   '/ranking': typeof RankingRoute
   '/sales': typeof SalesRoute
-  '/practice/$mode': typeof PracticeModeRoute
   '/practice/': typeof PracticeIndexRoute
+  '/practice/$groupId/$mode': typeof PracticeGroupIdModeRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -83,8 +83,8 @@ export interface FileRoutesByTo {
   '/join': typeof JoinRoute
   '/ranking': typeof RankingRoute
   '/sales': typeof SalesRoute
-  '/practice/$mode': typeof PracticeModeRoute
   '/practice': typeof PracticeIndexRoute
+  '/practice/$groupId/$mode': typeof PracticeGroupIdModeRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -95,8 +95,8 @@ export interface FileRoutesById {
   '/practice': typeof PracticeRouteWithChildren
   '/ranking': typeof RankingRoute
   '/sales': typeof SalesRoute
-  '/practice/$mode': typeof PracticeModeRoute
   '/practice/': typeof PracticeIndexRoute
+  '/practice/$groupId/$mode': typeof PracticeGroupIdModeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -108,8 +108,8 @@ export interface FileRouteTypes {
     | '/practice'
     | '/ranking'
     | '/sales'
-    | '/practice/$mode'
     | '/practice/'
+    | '/practice/$groupId/$mode'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -118,8 +118,8 @@ export interface FileRouteTypes {
     | '/join'
     | '/ranking'
     | '/sales'
-    | '/practice/$mode'
     | '/practice'
+    | '/practice/$groupId/$mode'
   id:
     | '__root__'
     | '/'
@@ -129,8 +129,8 @@ export interface FileRouteTypes {
     | '/practice'
     | '/ranking'
     | '/sales'
-    | '/practice/$mode'
     | '/practice/'
+    | '/practice/$groupId/$mode'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -201,24 +201,24 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PracticeIndexRouteImport
       parentRoute: typeof PracticeRoute
     }
-    '/practice/$mode': {
-      id: '/practice/$mode'
-      path: '/$mode'
-      fullPath: '/practice/$mode'
-      preLoaderRoute: typeof PracticeModeRouteImport
+    '/practice/$groupId/$mode': {
+      id: '/practice/$groupId/$mode'
+      path: '/$groupId/$mode'
+      fullPath: '/practice/$groupId/$mode'
+      preLoaderRoute: typeof PracticeGroupIdModeRouteImport
       parentRoute: typeof PracticeRoute
     }
   }
 }
 
 interface PracticeRouteChildren {
-  PracticeModeRoute: typeof PracticeModeRoute
   PracticeIndexRoute: typeof PracticeIndexRoute
+  PracticeGroupIdModeRoute: typeof PracticeGroupIdModeRoute
 }
 
 const PracticeRouteChildren: PracticeRouteChildren = {
-  PracticeModeRoute: PracticeModeRoute,
   PracticeIndexRoute: PracticeIndexRoute,
+  PracticeGroupIdModeRoute: PracticeGroupIdModeRoute,
 }
 
 const PracticeRouteWithChildren = PracticeRoute._addFileChildren(
@@ -237,3 +237,12 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}
