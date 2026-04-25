@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { generateAIQuestion } from "@/lib/ai.functions";
+import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/practice/$mode")({
@@ -97,11 +98,14 @@ function PracticeMode() {
   const current = words[idx];
   return (
     <div className="mx-auto max-w-2xl px-4 py-8">
-      <div className="mb-4 flex items-center justify-between">
-        <Link to="/practice" className="text-sm text-muted-foreground hover:text-foreground">← 返回练习中心</Link>
-        <div className="text-sm text-muted-foreground">{idx + 1} / {words.length} · {MODE_NAMES[mode] ?? mode}</div>
+      <div className="mb-3 flex items-center gap-3">
+        <Link to="/practice" className="text-sm text-muted-foreground hover:text-foreground shrink-0">← 返回</Link>
+        <Progress value={((idx) / words.length) * 100} className="flex-1 h-2" />
+        <div className="text-sm text-muted-foreground shrink-0 tabular-nums">{idx + 1} / {words.length}</div>
       </div>
-      <div className="glass-card rounded-2xl p-6 md:p-8">
+      <div className="text-xs text-muted-foreground mb-3 text-center">{MODE_NAMES[mode] ?? mode}</div>
+      <div className={mode === "study" ? "" : "glass-card rounded-2xl p-6 md:p-8"}>
+        {mode === "study" && <StudyCard word={current} onResult={(c) => { recordResult(current, c); next(); }} />}
         {mode === "cn2en" && <Cn2En word={current} onResult={(c) => { recordResult(current, c); next(); }} />}
         {mode === "en2cn" && <En2Cn word={current} pool={words} onResult={(c) => { recordResult(current, c); next(); }} />}
         {mode === "match" && <MatchGame pool={words.slice(0, 6)} onDone={() => { recordResult(current, true); next(); }} />}
