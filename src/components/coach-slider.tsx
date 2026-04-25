@@ -61,7 +61,11 @@ export function CoachSlider({ selectMode = false }: { selectMode?: boolean }) {
             {COACHES.map((c) => (
               <button
                 key={c.id}
-                onClick={() => { setPaused(true); setOpen(c); }}
+                onClick={() => {
+                  setPaused(true);
+                  if (selectMode) setLeadCoach(c);
+                  else setOpen(c);
+                }}
                 className="snap-end-strict glass-card group relative shrink-0 w-[260px] md:w-[300px] overflow-hidden rounded-2xl text-left transition-transform hover:scale-[1.03] hover:glow-purple"
               >
                 <img src={c.image} alt={c.name} className="h-[380px] w-full object-cover" loading="lazy" />
@@ -69,6 +73,11 @@ export function CoachSlider({ selectMode = false }: { selectMode?: boolean }) {
                   <div className="text-lg font-bold text-white">{c.name} <span className="text-xs text-gold">{c.enName}</span></div>
                   <div className="text-xs text-white/80">{c.title}</div>
                   <div className="text-xs text-gold">{c.subject}</div>
+                  {selectMode && (
+                    <div className="mt-2 inline-block text-[11px] px-2 py-1 rounded-md bg-gold text-[oklch(0.20_0.05_290)] font-bold">
+                      选择 TA →
+                    </div>
+                  )}
                 </div>
               </button>
             ))}
