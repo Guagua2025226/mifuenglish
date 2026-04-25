@@ -8,6 +8,7 @@ export const Route = createFileRoute("/practice")({
 });
 
 const MODES = [
+  { id: "study", name: "学习打卡", desc: "看词→发音→评级，间隔记忆", icon: "📖", ai: false, featured: true },
   { id: "cn2en", name: "中翻英", desc: "看中文写英文单词", icon: "✏️", ai: false },
   { id: "en2cn", name: "英翻中", desc: "看英文选中文释义", icon: "🔤", ai: false },
   { id: "match", name: "单词翻翻乐", desc: "记忆配对小游戏", icon: "🎴", ai: false },
@@ -36,7 +37,9 @@ function PracticeIndex() {
             key={m.id}
             to="/practice/$mode"
             params={{ mode: m.id }}
-            className="glass-card rounded-2xl p-6 transition-transform hover:scale-[1.02] hover:glow-purple block"
+            className={`glass-card rounded-2xl p-6 transition-transform hover:scale-[1.02] hover:glow-purple block ${
+              (m as any).featured ? "ring-2 ring-gold sm:col-span-2 lg:col-span-3 bg-gradient-to-r from-gold/10 to-primary/10" : ""
+            }`}
           >
             <div className="text-4xl mb-3">{m.icon}</div>
             <div className="text-lg font-bold text-gradient-gold">{m.name}</div>
