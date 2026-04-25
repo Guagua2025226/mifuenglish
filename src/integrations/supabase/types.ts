@@ -41,6 +41,48 @@ export type Database = {
         }
         Relationships: []
       }
+      leads: {
+        Row: {
+          assigned_sales: string
+          coach_id: string
+          coach_name: string
+          created_at: string
+          id: string
+          mbti: string | null
+          parent_name: string
+          phone: string
+          score_range: string
+          student_id: string | null
+          subject: string
+        }
+        Insert: {
+          assigned_sales: string
+          coach_id: string
+          coach_name: string
+          created_at?: string
+          id?: string
+          mbti?: string | null
+          parent_name: string
+          phone: string
+          score_range: string
+          student_id?: string | null
+          subject: string
+        }
+        Update: {
+          assigned_sales?: string
+          coach_id?: string
+          coach_name?: string
+          created_at?: string
+          id?: string
+          mbti?: string | null
+          parent_name?: string
+          phone?: string
+          score_range?: string
+          student_id?: string | null
+          subject?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
