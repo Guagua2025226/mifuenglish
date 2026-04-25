@@ -117,35 +117,20 @@ export function CoachSlider({ selectMode = false }: { selectMode?: boolean }) {
               <Button
                 size="lg"
                 className="w-full bg-gradient-to-r from-[oklch(0.82_0.14_85)] to-[oklch(0.72_0.16_70)] text-[oklch(0.20_0.05_290)] font-bold hover:opacity-90"
-                onClick={() => setSalesOpen(pickRandomSales())}
+                onClick={() => { setLeadCoach(open); setOpen(null); }}
               >
-                立即试听
+                立即体验
               </Button>
             </>
           )}
         </DialogContent>
       </Dialog>
 
-      {/* Sales QR dialog */}
-      <Dialog open={!!salesOpen} onOpenChange={(v) => { if (!v) setSalesOpen(null); }}>
-        <DialogContent className="max-w-md">
-          {salesOpen && (
-            <>
-              <DialogHeader>
-                <DialogTitle>添加专属销售顾问</DialogTitle>
-                <DialogDescription>扫描下方二维码联系 {salesOpen.name} 老师，预约试听课</DialogDescription>
-              </DialogHeader>
-              <div className="flex flex-col items-center">
-                <img src={salesOpen.image} alt={salesOpen.name} className="rounded-xl w-full max-w-xs" />
-                <div className="mt-3 text-center">
-                  <div className="text-lg font-bold">{salesOpen.name}</div>
-                  <div className="text-xs text-muted-foreground">{salesOpen.company}</div>
-                </div>
-              </div>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
+      <LeadDialog
+        open={!!leadCoach}
+        onOpenChange={(v) => { if (!v) { setLeadCoach(null); setPaused(false); } }}
+        coach={leadCoach}
+      />
     </section>
   );
 }
