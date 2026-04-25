@@ -14,7 +14,122 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      daily_checkin: {
+        Row: {
+          checkin_date: string
+          correct_count: number
+          created_at: string
+          id: string
+          user_id: string
+          words_studied: number
+        }
+        Insert: {
+          checkin_date: string
+          correct_count?: number
+          created_at?: string
+          id?: string
+          user_id: string
+          words_studied?: number
+        }
+        Update: {
+          checkin_date?: string
+          correct_count?: number
+          created_at?: string
+          id?: string
+          user_id?: string
+          words_studied?: number
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          id: string
+          nickname: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          nickname?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          nickname?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      user_progress: {
+        Row: {
+          correct_count: number
+          created_at: string
+          id: string
+          last_reviewed_at: string | null
+          mastery: number
+          updated_at: string
+          user_id: string
+          word_id: string
+          wrong_count: number
+        }
+        Insert: {
+          correct_count?: number
+          created_at?: string
+          id?: string
+          last_reviewed_at?: string | null
+          mastery?: number
+          updated_at?: string
+          user_id: string
+          word_id: string
+          wrong_count?: number
+        }
+        Update: {
+          correct_count?: number
+          created_at?: string
+          id?: string
+          last_reviewed_at?: string | null
+          mastery?: number
+          updated_at?: string
+          user_id?: string
+          word_id?: string
+          wrong_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_progress_word_id_fkey"
+            columns: ["word_id"]
+            isOneToOne: false
+            referencedRelation: "vocabulary"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vocabulary: {
+        Row: {
+          created_at: string
+          id: string
+          meaning: string
+          pos: string | null
+          word: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          meaning: string
+          pos?: string | null
+          word: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          meaning?: string
+          pos?: string | null
+          word?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
