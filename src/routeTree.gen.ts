@@ -16,6 +16,7 @@ import { Route as JoinRouteImport } from './routes/join'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CoachesRouteImport } from './routes/coaches'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PracticeIndexRouteImport } from './routes/practice.index'
 import { Route as PracticeModeRouteImport } from './routes/practice.$mode'
 
 const SalesRoute = SalesRouteImport.update({
@@ -53,6 +54,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PracticeIndexRoute = PracticeIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => PracticeRoute,
+} as any)
 const PracticeModeRoute = PracticeModeRouteImport.update({
   id: '/$mode',
   path: '/$mode',
@@ -68,16 +74,17 @@ export interface FileRoutesByFullPath {
   '/ranking': typeof RankingRoute
   '/sales': typeof SalesRoute
   '/practice/$mode': typeof PracticeModeRoute
+  '/practice/': typeof PracticeIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/coaches': typeof CoachesRoute
   '/dashboard': typeof DashboardRoute
   '/join': typeof JoinRoute
-  '/practice': typeof PracticeRouteWithChildren
   '/ranking': typeof RankingRoute
   '/sales': typeof SalesRoute
   '/practice/$mode': typeof PracticeModeRoute
+  '/practice': typeof PracticeIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -89,6 +96,7 @@ export interface FileRoutesById {
   '/ranking': typeof RankingRoute
   '/sales': typeof SalesRoute
   '/practice/$mode': typeof PracticeModeRoute
+  '/practice/': typeof PracticeIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -101,16 +109,17 @@ export interface FileRouteTypes {
     | '/ranking'
     | '/sales'
     | '/practice/$mode'
+    | '/practice/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/coaches'
     | '/dashboard'
     | '/join'
-    | '/practice'
     | '/ranking'
     | '/sales'
     | '/practice/$mode'
+    | '/practice'
   id:
     | '__root__'
     | '/'
@@ -121,6 +130,7 @@ export interface FileRouteTypes {
     | '/ranking'
     | '/sales'
     | '/practice/$mode'
+    | '/practice/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -184,6 +194,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/practice/': {
+      id: '/practice/'
+      path: '/'
+      fullPath: '/practice/'
+      preLoaderRoute: typeof PracticeIndexRouteImport
+      parentRoute: typeof PracticeRoute
+    }
     '/practice/$mode': {
       id: '/practice/$mode'
       path: '/$mode'
@@ -196,10 +213,12 @@ declare module '@tanstack/react-router' {
 
 interface PracticeRouteChildren {
   PracticeModeRoute: typeof PracticeModeRoute
+  PracticeIndexRoute: typeof PracticeIndexRoute
 }
 
 const PracticeRouteChildren: PracticeRouteChildren = {
   PracticeModeRoute: PracticeModeRoute,
+  PracticeIndexRoute: PracticeIndexRoute,
 }
 
 const PracticeRouteWithChildren = PracticeRoute._addFileChildren(
@@ -218,3 +237,12 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}
