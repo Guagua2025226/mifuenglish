@@ -62,6 +62,68 @@ export type Database = {
         }
         Relationships: []
       }
+      students: {
+        Row: {
+          created_at: string
+          district: string
+          grade: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          district: string
+          grade: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          district?: string
+          grade?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      study_logs: {
+        Row: {
+          correct_count: number
+          created_at: string
+          id: string
+          mode: string
+          score: number
+          student_id: string
+          words_studied: number
+        }
+        Insert: {
+          correct_count?: number
+          created_at?: string
+          id?: string
+          mode: string
+          score?: number
+          student_id: string
+          words_studied?: number
+        }
+        Update: {
+          correct_count?: number
+          created_at?: string
+          id?: string
+          mode?: string
+          score?: number
+          student_id?: string
+          words_studied?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "study_logs_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_progress: {
         Row: {
           correct_count: number

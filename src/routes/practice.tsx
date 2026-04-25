@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useAuth } from "@/lib/auth-context";
+import { useStudent } from "@/lib/student-context";
 import { useEffect } from "react";
 
 export const Route = createFileRoute("/practice")({
@@ -18,15 +18,17 @@ const MODES = [
 ];
 
 function PracticeIndex() {
-  const { user, loading } = useAuth();
+  const { student, loading } = useStudent();
   const navigate = useNavigate();
-  useEffect(() => { if (!loading && !user) navigate({ to: "/auth" }); }, [user, loading, navigate]);
-  if (!user) return null;
+  useEffect(() => { if (!loading && !student) navigate({ to: "/join" }); }, [student, loading, navigate]);
+  if (!student) return null;
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
       <h1 className="text-2xl md:text-3xl font-bold text-gradient-gold">词汇练习中心</h1>
-      <p className="text-sm text-muted-foreground">中考前词汇冲刺 · 中考一二模提炼 · 共 7 种模式</p>
+      <p className="text-sm text-muted-foreground">
+        {student.name} · {student.grade} · {student.district} · 共 7 种模式
+      </p>
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {MODES.map((m) => (

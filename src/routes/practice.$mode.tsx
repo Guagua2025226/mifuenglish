@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useEffect, useState, useCallback } from "react";
-import { useAuth } from "@/lib/auth-context";
+import { useEffect, useRef, useState, useCallback } from "react";
+import { useStudent } from "@/lib/student-context";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,65 +20,65 @@ const MODE_NAMES: Record<string, string> = {
 
 function PracticeMode() {
   const { mode } = Route.useParams();
-  const { user, loading: authLoading } = useAuth();
+  const { student, loading: authLoading } = useStudent();
   const navigate = useNavigate();
   const [words, setWords] = useState<Word[]>([]);
   const [idx, setIdx] = useState(0);
   const [studied, setStudied] = useState(0);
+  const [correctCount, setCorrectCount] = useState(0);
+  const savedRef = useRef(false);
 
-  useEffect(() => { if (!authLoading && !user) navigate({ to: "/auth" }); }, [user, authLoading, navigate]);
+  useEffect(() => { if (!authLoading && !student) navigate({ to: "/join" }); }, [student, authLoading, navigate]);
 
   useEffect(() => {
     (async () => {
       const { data } = await supabase.from("vocabulary").select("*").limit(500);
       const shuffled = [...(data ?? [])].sort(() => Math.random() - 0.5).slice(0, 20);
       setWords(shuffled as Word[]);
-      setIdx(0); setStudied(0);
+      setIdx(0); setStudied(0); setCorrectCount(0);
+      savedRef.current = false;
     })();
   }, [mode]);
 
-  const recordResult = useCallback(async (word: Word, correct: boolean) => {
-    if (!user) return;
+  const recordResult = useCallback((_word: Word, correct: boolean) => {
     setStudied((s) => s + 1);
-    const today = new Date().toISOString().slice(0, 10);
-    // upsert progress
-    const { data: existing } = await supabase.from("user_progress").select("*").eq("user_id", user.id).eq("word_id", word.id).maybeSingle();
-    if (existing) {
-      await supabase.from("user_progress").update({
-        correct_count: existing.correct_count + (correct ? 1 : 0),
-        wrong_count: existing.wrong_count + (correct ? 0 : 1),
-        mastery: Math.max(0, existing.mastery + (correct ? 1 : -1)),
-        last_reviewed_at: new Date().toISOString(),
-      }).eq("id", existing.id);
-    } else {
-      await supabase.from("user_progress").insert({
-        user_id: user.id, word_id: word.id,
-        correct_count: correct ? 1 : 0, wrong_count: correct ? 0 : 1,
-        mastery: correct ? 1 : 0, last_reviewed_at: new Date().toISOString(),
-      });
-    }
-    // upsert today checkin
-    const { data: ck } = await supabase.from("daily_checkin").select("*").eq("user_id", user.id).eq("checkin_date", today).maybeSingle();
-    if (ck) {
-      await supabase.from("daily_checkin").update({ words_studied: ck.words_studied + 1, correct_count: ck.correct_count + (correct ? 1 : 0) }).eq("id", ck.id);
-    } else {
-      await supabase.from("daily_checkin").insert({ user_id: user.id, checkin_date: today, words_studied: 1, correct_count: correct ? 1 : 0 });
-    }
-  }, [user]);
+    if (correct) setCorrectCount((c) => c + 1);
+  }, []);
 
   const next = () => setIdx((i) => i + 1);
 
-  if (!user || words.length === 0) return <div className="p-12 text-center text-muted-foreground">加载中...</div>;
+  // Save session to study_logs once when finished
+  useEffect(() => {
+    if (!student || words.length === 0) return;
+    if (idx < words.length) return;
+    if (savedRef.current || studied === 0) return;
+    savedRef.current = true;
+    const score = studied > 0 ? Math.round((correctCount / studied) * 100) : 0;
+    supabase.from("study_logs").insert({
+      student_id: student.id,
+      mode,
+      words_studied: studied,
+      correct_count: correctCount,
+      score,
+    }).then(({ error }) => {
+      if (error) toast.error("打卡保存失败");
+      else toast.success(`打卡成功！+${studied} 词`);
+    });
+  }, [idx, words.length, studied, correctCount, student, mode]);
+
+  if (!student || words.length === 0) return <div className="p-12 text-center text-muted-foreground">加载中...</div>;
   if (idx >= words.length) {
+    const score = studied > 0 ? Math.round((correctCount / studied) * 100) : 0;
     return (
       <div className="mx-auto max-w-xl px-4 py-12 text-center">
         <div className="glass-card rounded-2xl p-8">
           <div className="text-5xl mb-3">🎉</div>
           <h2 className="text-2xl font-bold text-gradient-gold">本轮完成！</h2>
-          <p className="mt-2 text-muted-foreground">本次共练习 {studied} 个单词</p>
-          <div className="mt-6 flex gap-3 justify-center">
-            <Button onClick={() => { setIdx(0); setStudied(0); }}>再来一轮</Button>
-            <Link to="/dashboard"><Button variant="outline">查看打卡</Button></Link>
+          <p className="mt-2 text-muted-foreground">练习 {studied} 词 · 正确 {correctCount} · 得分 {score}</p>
+          <div className="mt-6 flex gap-3 justify-center flex-wrap">
+            <Button onClick={() => { setIdx(0); setStudied(0); setCorrectCount(0); savedRef.current = false; }}>再来一轮</Button>
+            <Link to="/dashboard"><Button variant="outline">我的打卡</Button></Link>
+            <Link to="/ranking"><Button variant="outline">🏆 封神榜</Button></Link>
           </div>
         </div>
       </div>
