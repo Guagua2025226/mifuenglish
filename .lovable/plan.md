@@ -1,71 +1,54 @@
-# 米赋AI教育 · 中考词汇冲刺打卡网站
+## 目标
 
-## 一、整体定位
-- **大标题**：米赋AI教育
-- **副标题**：AI+教练 双师系统创导者
-- **核心模块**：中考前词汇冲刺（中考一二模提炼）单词打卡 + 教练滑动榜
-- **品牌色**：紫色调（取自上传海报：深紫渐变 + 金色点缀）+ 凤凰LOGO
+模仿截图，把"词汇练习中心"中的"中翻英"改造成卡片式学习打卡模式：进入后**直接显示英文单词** + **TTS 发音按钮**，"显示释义"后用 **不会 / 模糊 / 认识 / 掌握** 四档评级（SRS 间隔），并把这套作为新主模式 `study`。
 
-## 二、页面结构
+## 截图还原要点
 
-```text
-/                          首页（Hero + 功能入口 + 教练滑动榜）
-/auth                      登录 / 注册
-/dashboard                 我的打卡（连续天数、今日进度、词汇掌握度）
-/practice                  练习中心（7种练习模式入口）
-/practice/$mode/$session   单题练习页
-/coaches                   教练完整列表
-```
+- 顶部进度条 + `1 / 20`
+- 大白卡片，居中显示单词（如 `allow`），右侧绿色喇叭按钮（点击发音）
+- "新词"小徽章
+- "显示释义"按钮 → 点击后展开中文释义 + 词性
+- 下方 4 个彩色评级按钮：
+  - 不会（红，+明天）
+  - 模糊（黄，+2 天）
+  - 认识（浅绿，+4 天）
+  - 掌握（深绿，+7 天）
+- 提示文案"想想看再点显示释义"
 
-## 三、功能模块
+## 新增/修改
 
-### 1. 账号系统（Lovable Cloud）
-- 邮箱+密码注册登录、Google 登录
-- 用户表 `profiles` 存昵称；`user_progress` 存每个词的掌握度；`daily_checkin` 存每日打卡
+### 1. 新增"学习打卡"模式 `study`
+- `src/routes/practice.$mode.tsx`：新增 `StudyCard` 组件作为 `mode === "study"` 的渲染。
+- 进入即显单词 + 发音按钮（用浏览器内置 `speechSynthesis`，`lang="en-US"`，无需任何 API）。
+- 点击"显示释义"切换释义可见。
+- 点击四档评级按钮 → 记 1 题（"不会"算错，其余算对）→ `next()`。
+- 完成时仍写入 `study_logs`（保持现有逻辑）。
 
-### 2. 单词打卡 Dashboard
-- 顶部：连续打卡天数 🔥、今日已学/目标、累计掌握词数
-- 学习进度环形图 + 7天热力图
-- "今日打卡"按钮：完成今日学习任务后亮章
+### 2. 在练习中心置顶"学习打卡"卡片
+- `src/routes/practice.tsx`：MODES 数组顶部新增  
+  `{ id: "study", name: "学习打卡", desc: "看词→评级，间隔记忆", icon: "📖", ai: false }`，并在网格中突出显示（更大卡片 / 描边强调）。
 
-### 3. 七种练习模式（基于上传 Excel ~200词）
-| 模式 | 说明 | 出题方式 |
-|---|---|---|
-| 中翻英 | 给中文写英文 | 词库 |
-| 英翻中 | 给英文选中文 | 词库 |
-| 词性转换 | apply→application 等 | AI 实时生成 |
-| 词根词缀 | un-/dis-/-able 拆解讲解 | AI 实时生成 |
-| 固定搭配 | apply for / be absent from | AI 实时生成 |
-| 语法填空 | 给中考真题语境短文挖空 | AI 实时生成 |
-| 单词翻翻乐 | 记忆配对小游戏（中英卡片翻转配对） | 词库 |
+### 3. 视觉对齐截图
+- 卡片采用更亮的浅色背景（在当前深紫主题下，使用 `bg-card/95` + 大圆角 + 阴影），单词用大号深色字。
+- 4 个评级按钮使用现有色板（destructive / gold / success 浅深两档）+ 圆角大按钮，字号清晰。
+- 顶部已有 `idx+1 / words.length`，补一条 Tailwind `Progress` 横条。
 
-- 所有 AI 题型通过 TanStack 服务端函数调用 Lovable AI Gateway（`google/gemini-3-flash-preview`），后端注入 system prompt + 中考考纲约束
-- 每题答对/答错写入 `user_progress`，更新该词掌握度（艾宾浩斯式：错过的词更高频复现）
+## 不在范围
+- 不改其它 6 个模式的 UI。
+- 不实现真正的 SRS 持久化间隔（仅显示 +天数文案，作为视觉一致），后续可扩展。
+- 不接入第三方 TTS（用浏览器原生 `speechSynthesis`，零成本，多数环境可用）。
 
-### 4. 教练滑动榜（首页 + /coaches）
-- 横向滑动 carousel，展示 3 位真实教练（陈昱蓉 / 吕宁 / 张馨鹏）+ 占位卡片，营造连续滑动感
-- 交互逻辑：
-  - **左右滑动**：默认自动缓慢滚动
-  - **教练卡片靠到右侧定位区时自动停止**（吸附 snap）
-  - **点击卡片**：放大弹窗显示完整海报 + 教学特色详情
-  - 弹窗底部按钮：**「立即试听」**
-  - 点击立即试听 → 弹出销售顾问二维码：李晶 50% / 郑家宝 50% 随机展示，含姓名、公司、二维码图
+## 技术细节
 
-### 5. 资源下载
-- 提供上传的"2026年中考英语阅读完形高频词汇默写表"PDF 下载链接
-
-## 四、设计风格
-- 深紫渐变背景 + 金色高亮（呼应海报）
-- 凤凰LOGO + "为不教而教 为自学而学" slogan
-- 卡片：玻璃拟态（毛玻璃+紫色高光）
-- 字体：中文思源黑体 / 英文 Inter
-- 全部移动端响应式（学生主要在手机上打卡）
-
-## 五、技术细节（开发参考）
-- TanStack Start + Lovable Cloud（Supabase）+ Lovable AI Gateway
-- 词库通过种子脚本一次性导入 `vocabulary` 表
-- 数据表：`profiles`、`vocabulary`、`user_progress`、`daily_checkin`、`coaches`、`sales_consultants`
-- AI 出题用 `createServerFn` + tool calling 输出结构化题目（题干/选项/答案/解析）
-- 滑动榜用 embla-carousel + scroll-snap，吸附位检测后暂停 autoplay
-- 上传的教练海报、销售顾问名片、凤凰LOGO 复制到 `src/assets/`
-- 二维码图片：直接裁剪上传的销售顾问名片图作为弹窗内容
+- 发音函数：
+  ```ts
+  const speak = (w: string) => {
+    const u = new SpeechSynthesisUtterance(w);
+    u.lang = "en-US"; u.rate = 0.9;
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(u);
+  };
+  ```
+- 进入卡片时自动播放一次发音（可选）。
+- `Progress` 用现有 `@/components/ui/progress`，`value={(idx/words.length)*100}`。
+- 评级 → `recordResult(current, level !== "unknown"); next();`

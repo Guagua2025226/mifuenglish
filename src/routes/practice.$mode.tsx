@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { generateAIQuestion } from "@/lib/ai.functions";
+import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/practice/$mode")({
@@ -14,9 +15,18 @@ export const Route = createFileRoute("/practice/$mode")({
 interface Word { id: string; word: string; meaning: string; pos: string | null }
 
 const MODE_NAMES: Record<string, string> = {
-  cn2en: "中翻英", en2cn: "英翻中", match: "单词翻翻乐",
+  study: "学习打卡", cn2en: "中翻英", en2cn: "英翻中", match: "单词翻翻乐",
   pos: "词性转换", root: "词根词缀", collocation: "固定搭配", cloze: "语法填空",
 };
+
+function speakWord(w: string) {
+  if (typeof window === "undefined" || !window.speechSynthesis) return;
+  const u = new SpeechSynthesisUtterance(w);
+  u.lang = "en-US";
+  u.rate = 0.9;
+  window.speechSynthesis.cancel();
+  window.speechSynthesis.speak(u);
+}
 
 function PracticeMode() {
   const { mode } = Route.useParams();
@@ -88,11 +98,14 @@ function PracticeMode() {
   const current = words[idx];
   return (
     <div className="mx-auto max-w-2xl px-4 py-8">
-      <div className="mb-4 flex items-center justify-between">
-        <Link to="/practice" className="text-sm text-muted-foreground hover:text-foreground">← 返回练习中心</Link>
-        <div className="text-sm text-muted-foreground">{idx + 1} / {words.length} · {MODE_NAMES[mode] ?? mode}</div>
+      <div className="mb-3 flex items-center gap-3">
+        <Link to="/practice" className="text-sm text-muted-foreground hover:text-foreground shrink-0">← 返回</Link>
+        <Progress value={((idx) / words.length) * 100} className="flex-1 h-2" />
+        <div className="text-sm text-muted-foreground shrink-0 tabular-nums">{idx + 1} / {words.length}</div>
       </div>
-      <div className="glass-card rounded-2xl p-6 md:p-8">
+      <div className="text-xs text-muted-foreground mb-3 text-center">{MODE_NAMES[mode] ?? mode}</div>
+      <div className={mode === "study" ? "" : "glass-card rounded-2xl p-6 md:p-8"}>
+        {mode === "study" && <StudyCard word={current} onResult={(c: boolean) => { recordResult(current, c); next(); }} />}
         {mode === "cn2en" && <Cn2En word={current} onResult={(c) => { recordResult(current, c); next(); }} />}
         {mode === "en2cn" && <En2Cn word={current} pool={words} onResult={(c) => { recordResult(current, c); next(); }} />}
         {mode === "match" && <MatchGame pool={words.slice(0, 6)} onDone={() => { recordResult(current, true); next(); }} />}
@@ -318,5 +331,72 @@ function Row({ label, value }: { label: string; value: string }) {
       <div className="text-muted-foreground w-16 shrink-0">{label}</div>
       <div className="flex-1">{value || "-"}</div>
     </div>
+  );
+}
+
+function StudyCard({ word, onResult }: { word: Word; onResult: (correct: boolean) => void }) {
+  const [showMeaning, setShowMeaning] = useState(false);
+
+  useEffect(() => {
+    setShowMeaning(false);
+    const t = setTimeout(() => speakWord(word.word), 250);
+    return () => clearTimeout(t);
+  }, [word.id]);
+
+  const rate = (level: "unknown" | "fuzzy" | "known" | "mastered") => {
+    onResult(level !== "unknown");
+  };
+
+  const levels = [
+    { id: "unknown", label: "不会", days: "+明天", cls: "bg-destructive/15 hover:bg-destructive/25 border-destructive/40 text-destructive-foreground", labelCls: "text-destructive" },
+    { id: "fuzzy", label: "模糊", days: "+2 天", cls: "bg-gold/15 hover:bg-gold/25 border-gold/40", labelCls: "text-gold" },
+    { id: "known", label: "认识", days: "+4 天", cls: "bg-success/15 hover:bg-success/25 border-success/40", labelCls: "text-success" },
+    { id: "mastered", label: "掌握", days: "+7 天", cls: "bg-success/30 hover:bg-success/40 border-success/60", labelCls: "text-success" },
+  ] as const;
+
+  return (
+    <>
+      <div className="glass-card rounded-3xl p-10 md:p-14 text-center min-h-[280px] flex flex-col items-center justify-center">
+        <div className="inline-flex items-center gap-1 text-xs px-3 py-1 rounded-full bg-gold/20 text-gold mb-6">
+          ✨ 新词
+        </div>
+        <div className="flex items-center gap-4">
+          <div className="text-5xl md:text-6xl font-extrabold tracking-tight">{word.word}</div>
+          <button
+            onClick={() => speakWord(word.word)}
+            aria-label="发音"
+            className="h-12 w-12 rounded-full bg-success/20 hover:bg-success/30 flex items-center justify-center text-success transition"
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+          </button>
+        </div>
+        {word.pos && <div className="mt-2 text-sm text-muted-foreground">{word.pos}</div>}
+
+        {!showMeaning ? (
+          <Button variant="outline" className="mt-8" onClick={() => setShowMeaning(true)}>
+            👁  显示释义
+          </Button>
+        ) : (
+          <div className="mt-6 text-2xl md:text-3xl font-semibold text-gradient-gold max-w-xl">
+            {word.meaning}
+          </div>
+        )}
+      </div>
+
+      <div className="mt-3 text-center text-xs text-muted-foreground">想想看再点显示释义</div>
+
+      <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3">
+        {levels.map((lv) => (
+          <button
+            key={lv.id}
+            onClick={() => rate(lv.id)}
+            className={`rounded-2xl border-2 py-4 transition ${lv.cls}`}
+          >
+            <div className={`text-lg font-bold ${lv.labelCls}`}>{lv.label}</div>
+            <div className={`text-xs mt-0.5 ${lv.labelCls} opacity-80`}>{lv.days}</div>
+          </button>
+        ))}
+      </div>
+    </>
   );
 }
