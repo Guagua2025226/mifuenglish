@@ -105,7 +105,7 @@ function PracticeMode() {
       </div>
       <div className="text-xs text-muted-foreground mb-3 text-center">{MODE_NAMES[mode] ?? mode}</div>
       <div className={mode === "study" ? "" : "glass-card rounded-2xl p-6 md:p-8"}>
-        {mode === "study" && <StudyCard word={current} onResult={(c) => { recordResult(current, c); next(); }} />}
+        {mode === "study" && <StudyCard word={current} onResult={(c: boolean) => { recordResult(current, c); next(); }} />}
         {mode === "cn2en" && <Cn2En word={current} onResult={(c) => { recordResult(current, c); next(); }} />}
         {mode === "en2cn" && <En2Cn word={current} pool={words} onResult={(c) => { recordResult(current, c); next(); }} />}
         {mode === "match" && <MatchGame pool={words.slice(0, 6)} onDone={() => { recordResult(current, true); next(); }} />}
