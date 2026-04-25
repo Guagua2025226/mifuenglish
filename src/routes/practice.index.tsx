@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import type { MouseEvent } from "react";
 import { useEffect, useState } from "react";
 import { useStudent } from "@/lib/student-context";
 
@@ -39,7 +40,7 @@ function PracticeIndex() {
 
   if (!student) return null;
 
-  const goToMode = (mode: string) => (e: React.MouseEvent<HTMLAnchorElement>) => {
+  const goToMode = (mode: string) => (e: MouseEvent<HTMLAnchorElement>) => {
     if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
     e.preventDefault();
     setNavError(null);
