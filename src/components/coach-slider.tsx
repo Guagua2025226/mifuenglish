@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { COACHES, type Coach } from "@/lib/coaches";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { pickRandomSales, type Sales } from "@/lib/sales";
+import { LeadDialog } from "@/components/lead-dialog";
 
 // Build extended list with placeholder filler cards for stronger slider feel
 const PLACEHOLDERS = [
@@ -11,10 +11,10 @@ const PLACEHOLDERS = [
   { id: "ph3", name: "AI教研团", subject: "陆续公布" },
 ];
 
-export function CoachSlider() {
+export function CoachSlider({ selectMode = false }: { selectMode?: boolean }) {
   const scrollerRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState<Coach | null>(null);
-  const [salesOpen, setSalesOpen] = useState<Sales | null>(null);
+  const [leadCoach, setLeadCoach] = useState<Coach | null>(null);
   const [paused, setPaused] = useState(false);
 
   // Gentle auto-scroll until a card is snapped at the right anchor
