@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SalesRouteImport } from './routes/sales'
 import { Route as RankingRouteImport } from './routes/ranking'
 import { Route as PracticeRouteImport } from './routes/practice'
 import { Route as JoinRouteImport } from './routes/join'
@@ -17,6 +18,11 @@ import { Route as CoachesRouteImport } from './routes/coaches'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PracticeModeRouteImport } from './routes/practice.$mode'
 
+const SalesRoute = SalesRouteImport.update({
+  id: '/sales',
+  path: '/sales',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RankingRoute = RankingRouteImport.update({
   id: '/ranking',
   path: '/ranking',
@@ -60,6 +66,7 @@ export interface FileRoutesByFullPath {
   '/join': typeof JoinRoute
   '/practice': typeof PracticeRouteWithChildren
   '/ranking': typeof RankingRoute
+  '/sales': typeof SalesRoute
   '/practice/$mode': typeof PracticeModeRoute
 }
 export interface FileRoutesByTo {
@@ -69,6 +76,7 @@ export interface FileRoutesByTo {
   '/join': typeof JoinRoute
   '/practice': typeof PracticeRouteWithChildren
   '/ranking': typeof RankingRoute
+  '/sales': typeof SalesRoute
   '/practice/$mode': typeof PracticeModeRoute
 }
 export interface FileRoutesById {
@@ -79,6 +87,7 @@ export interface FileRoutesById {
   '/join': typeof JoinRoute
   '/practice': typeof PracticeRouteWithChildren
   '/ranking': typeof RankingRoute
+  '/sales': typeof SalesRoute
   '/practice/$mode': typeof PracticeModeRoute
 }
 export interface FileRouteTypes {
@@ -90,6 +99,7 @@ export interface FileRouteTypes {
     | '/join'
     | '/practice'
     | '/ranking'
+    | '/sales'
     | '/practice/$mode'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -99,6 +109,7 @@ export interface FileRouteTypes {
     | '/join'
     | '/practice'
     | '/ranking'
+    | '/sales'
     | '/practice/$mode'
   id:
     | '__root__'
@@ -108,6 +119,7 @@ export interface FileRouteTypes {
     | '/join'
     | '/practice'
     | '/ranking'
+    | '/sales'
     | '/practice/$mode'
   fileRoutesById: FileRoutesById
 }
@@ -118,10 +130,18 @@ export interface RootRouteChildren {
   JoinRoute: typeof JoinRoute
   PracticeRoute: typeof PracticeRouteWithChildren
   RankingRoute: typeof RankingRoute
+  SalesRoute: typeof SalesRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/sales': {
+      id: '/sales'
+      path: '/sales'
+      fullPath: '/sales'
+      preLoaderRoute: typeof SalesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/ranking': {
       id: '/ranking'
       path: '/ranking'
@@ -193,6 +213,7 @@ const rootRouteChildren: RootRouteChildren = {
   JoinRoute: JoinRoute,
   PracticeRoute: PracticeRouteWithChildren,
   RankingRoute: RankingRoute,
+  SalesRoute: SalesRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

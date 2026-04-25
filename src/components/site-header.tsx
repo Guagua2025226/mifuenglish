@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useStudent } from "@/lib/student-context";
 import { Button } from "@/components/ui/button";
-import logo from "@/assets/logo-phoenix.png";
+import logo from "@/assets/mifu-logo.png";
 
 export function SiteHeader() {
   const { student, signOut } = useStudent();
