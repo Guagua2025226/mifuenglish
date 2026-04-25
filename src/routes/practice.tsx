@@ -31,6 +31,18 @@ function PracticeIndex() {
         {student.name} · {student.grade} · {student.district} · 共 7 种模式
       </p>
 
+      <Link
+        to="/coaches"
+        search={{ select: true }}
+        className="mt-4 flex items-center justify-between gap-3 glass-card rounded-xl px-4 py-3 border border-gold/40 bg-gradient-to-r from-gold/10 to-primary/10 hover:scale-[1.01] transition"
+      >
+        <div className="text-sm">
+          <span className="text-gold font-semibold">想要 1V1 教练辅导？</span>
+          <span className="text-muted-foreground ml-1">选择心仪教练，免费试听课名额限时开放</span>
+        </div>
+        <span className="text-sm font-bold text-gold whitespace-nowrap">立即体验 →</span>
+      </Link>
+
       <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {MODES.map((m) => (
           <Link

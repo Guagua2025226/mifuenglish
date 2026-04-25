@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { COACHES, type Coach } from "@/lib/coaches";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { pickRandomSales, type Sales } from "@/lib/sales";
+import { LeadDialog } from "@/components/lead-dialog";
 
 // Build extended list with placeholder filler cards for stronger slider feel
 const PLACEHOLDERS = [
@@ -11,10 +11,10 @@ const PLACEHOLDERS = [
   { id: "ph3", name: "AI教研团", subject: "陆续公布" },
 ];
 
-export function CoachSlider() {
+export function CoachSlider({ selectMode = false }: { selectMode?: boolean }) {
   const scrollerRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState<Coach | null>(null);
-  const [salesOpen, setSalesOpen] = useState<Sales | null>(null);
+  const [leadCoach, setLeadCoach] = useState<Coach | null>(null);
   const [paused, setPaused] = useState(false);
 
   // Gentle auto-scroll until a card is snapped at the right anchor
@@ -61,7 +61,11 @@ export function CoachSlider() {
             {COACHES.map((c) => (
               <button
                 key={c.id}
-                onClick={() => { setPaused(true); setOpen(c); }}
+                onClick={() => {
+                  setPaused(true);
+                  if (selectMode) setLeadCoach(c);
+                  else setOpen(c);
+                }}
                 className="snap-end-strict glass-card group relative shrink-0 w-[260px] md:w-[300px] overflow-hidden rounded-2xl text-left transition-transform hover:scale-[1.03] hover:glow-purple"
               >
                 <img src={c.image} alt={c.name} className="h-[380px] w-full object-cover" loading="lazy" />
@@ -69,6 +73,11 @@ export function CoachSlider() {
                   <div className="text-lg font-bold text-white">{c.name} <span className="text-xs text-gold">{c.enName}</span></div>
                   <div className="text-xs text-white/80">{c.title}</div>
                   <div className="text-xs text-gold">{c.subject}</div>
+                  {selectMode && (
+                    <div className="mt-2 inline-block text-[11px] px-2 py-1 rounded-md bg-gold text-[oklch(0.20_0.05_290)] font-bold">
+                      选择 TA →
+                    </div>
+                  )}
                 </div>
               </button>
             ))}
@@ -108,35 +117,20 @@ export function CoachSlider() {
               <Button
                 size="lg"
                 className="w-full bg-gradient-to-r from-[oklch(0.82_0.14_85)] to-[oklch(0.72_0.16_70)] text-[oklch(0.20_0.05_290)] font-bold hover:opacity-90"
-                onClick={() => setSalesOpen(pickRandomSales())}
+                onClick={() => { setLeadCoach(open); setOpen(null); }}
               >
-                立即试听
+                立即体验
               </Button>
             </>
           )}
         </DialogContent>
       </Dialog>
 
-      {/* Sales QR dialog */}
-      <Dialog open={!!salesOpen} onOpenChange={(v) => { if (!v) setSalesOpen(null); }}>
-        <DialogContent className="max-w-md">
-          {salesOpen && (
-            <>
-              <DialogHeader>
-                <DialogTitle>添加专属销售顾问</DialogTitle>
-                <DialogDescription>扫描下方二维码联系 {salesOpen.name} 老师，预约试听课</DialogDescription>
-              </DialogHeader>
-              <div className="flex flex-col items-center">
-                <img src={salesOpen.image} alt={salesOpen.name} className="rounded-xl w-full max-w-xs" />
-                <div className="mt-3 text-center">
-                  <div className="text-lg font-bold">{salesOpen.name}</div>
-                  <div className="text-xs text-muted-foreground">{salesOpen.company}</div>
-                </div>
-              </div>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
+      <LeadDialog
+        open={!!leadCoach}
+        onOpenChange={(v) => { if (!v) { setLeadCoach(null); setPaused(false); } }}
+        coach={leadCoach}
+      />
     </section>
   );
 }

@@ -25,6 +25,11 @@ export function SiteHeader() {
           <Link to="/coaches" className="px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground" activeProps={{ className: "px-3 py-1.5 text-sm text-foreground font-medium" }}>教练团</Link>
         </nav>
         <div className="flex items-center gap-2">
+          <Link to="/coaches" search={{ select: true }} className="hidden sm:inline-flex">
+            <Button size="sm" className="bg-gradient-to-r from-[oklch(0.82_0.14_85)] to-[oklch(0.72_0.16_70)] text-[oklch(0.20_0.05_290)] font-bold hover:opacity-90">
+              ✨ 立即体验
+            </Button>
+          </Link>
           {student ? (
             <>
               <span className="hidden sm:block text-xs text-muted-foreground">
@@ -33,7 +38,7 @@ export function SiteHeader() {
               <Button variant="outline" size="sm" onClick={() => { signOut(); navigate({ to: "/" }); }}>退出</Button>
             </>
           ) : (
-            <Button size="sm" onClick={() => navigate({ to: "/join" })} className="bg-gradient-to-r from-primary to-[oklch(0.72_0.20_300)] hover:opacity-90">
+            <Button size="sm" variant="outline" onClick={() => navigate({ to: "/join" })}>
               加入打卡
             </Button>
           )}
