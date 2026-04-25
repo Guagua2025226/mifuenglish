@@ -14,9 +14,18 @@ export const Route = createFileRoute("/practice/$mode")({
 interface Word { id: string; word: string; meaning: string; pos: string | null }
 
 const MODE_NAMES: Record<string, string> = {
-  cn2en: "中翻英", en2cn: "英翻中", match: "单词翻翻乐",
+  study: "学习打卡", cn2en: "中翻英", en2cn: "英翻中", match: "单词翻翻乐",
   pos: "词性转换", root: "词根词缀", collocation: "固定搭配", cloze: "语法填空",
 };
+
+function speakWord(w: string) {
+  if (typeof window === "undefined" || !window.speechSynthesis) return;
+  const u = new SpeechSynthesisUtterance(w);
+  u.lang = "en-US";
+  u.rate = 0.9;
+  window.speechSynthesis.cancel();
+  window.speechSynthesis.speak(u);
+}
 
 function PracticeMode() {
   const { mode } = Route.useParams();
