@@ -1,11 +1,15 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useNavigate } from "@tanstack/react-router";
 import { useStudent } from "@/lib/student-context";
 import { useEffect, useState } from "react";
 
 export const Route = createFileRoute("/practice")({
   head: () => ({ meta: [{ title: "词汇练习 — 米赋AI教育" }] }),
-  component: PracticeIndex,
+  component: PracticeLayout,
 });
+
+function PracticeLayout() {
+  return <Outlet />;
+}
 
 const MODES = [
   { id: "study", name: "学习打卡", desc: "看词→发音→评级，间隔记忆", icon: "📖", ai: false, featured: true },
