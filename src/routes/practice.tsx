@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useStudent } from "@/lib/student-context";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 export const Route = createFileRoute("/practice")({
   head: () => ({ meta: [{ title: "词汇练习 — 米赋AI教育" }] }),
@@ -21,8 +21,46 @@ const MODES = [
 function PracticeIndex() {
   const { student, loading } = useStudent();
   const navigate = useNavigate();
+  const [hydrated, setHydrated] = useState(false);
+  const [navError, setNavError] = useState<string | null>(null);
+
+  useEffect(() => { setHydrated(true); }, []);
   useEffect(() => { if (!loading && !student) navigate({ to: "/join" }); }, [student, loading, navigate]);
+
+  // Auto-retry hydration if it stalls (catches SSR/hydration mismatch where buttons appear inert)
+  useEffect(() => {
+    if (hydrated) return;
+    const timer = setTimeout(() => {
+      if (!hydrated && typeof window !== "undefined") {
+        setNavError("页面加载中断，正在重新加载…");
+        setTimeout(() => window.location.reload(), 600);
+      }
+    }, 4000);
+    return () => clearTimeout(timer);
+  }, [hydrated]);
+
   if (!student) return null;
+
+  // Robust click handler: try router navigation, fall back to hard navigation if anything throws
+  const goToMode = (mode: string) => (e: React.MouseEvent<HTMLAnchorElement>) => {
+    // Allow modifier-clicks (open in new tab) to behave normally
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+    e.preventDefault();
+    setNavError(null);
+    try {
+      navigate({ to: "/practice/$mode", params: { mode } });
+      // Safety net: if router silently fails (didn't change URL), force hard navigation
+      setTimeout(() => {
+        if (typeof window !== "undefined" && !window.location.pathname.endsWith(`/practice/${mode}`)) {
+          window.location.assign(`/practice/${mode}`);
+        }
+      }, 800);
+    } catch (err) {
+      console.error("Navigation failed, falling back to hard nav", err);
+      setNavError("跳转出错，正在以安全方式打开…");
+      window.location.assign(`/practice/${mode}`);
+    }
+  };
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
@@ -30,6 +68,18 @@ function PracticeIndex() {
       <p className="text-sm text-muted-foreground">
         {student.name} · {student.grade} · {student.district} · 共 7 种模式
       </p>
+
+      {navError && (
+        <div className="mt-4 rounded-xl border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive flex items-center justify-between gap-3">
+          <span>⚠️ {navError}</span>
+          <button
+            onClick={() => window.location.reload()}
+            className="rounded-md border border-destructive/50 px-3 py-1 text-xs font-semibold hover:bg-destructive/20"
+          >
+            重新加载
+          </button>
+        </div>
+      )}
 
       <Link
         to="/coaches"
@@ -45,11 +95,11 @@ function PracticeIndex() {
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {MODES.map((m) => (
-          <Link
+          <a
             key={m.id}
-            to="/practice/$mode"
-            params={{ mode: m.id }}
-            className={`glass-card rounded-2xl p-6 transition-transform hover:scale-[1.02] hover:glow-purple block ${
+            href={`/practice/${m.id}`}
+            onClick={goToMode(m.id)}
+            className={`glass-card rounded-2xl p-6 transition-transform hover:scale-[1.02] hover:glow-purple block cursor-pointer ${
               (m as any).featured ? "ring-2 ring-gold sm:col-span-2 lg:col-span-3 bg-gradient-to-r from-gold/10 to-primary/10" : ""
             }`}
           >
@@ -57,7 +107,7 @@ function PracticeIndex() {
             <div className="text-lg font-bold text-gradient-gold">{m.name}</div>
             <div className="mt-1 text-xs text-muted-foreground">{m.desc}</div>
             {m.ai && <div className="mt-2 inline-block text-[10px] px-2 py-0.5 rounded-full bg-primary/30 text-primary-foreground">AI 智能出题</div>}
-          </Link>
+          </a>
         ))}
       </div>
     </div>
