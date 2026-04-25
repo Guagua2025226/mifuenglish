@@ -17,6 +17,7 @@ import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CoachesRouteImport } from './routes/coaches'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PracticeIndexRouteImport } from './routes/practice.index'
+import { Route as PracticeGroupIdModeRouteImport } from './routes/practice.$groupId.$mode'
 
 const SalesRoute = SalesRouteImport.update({
   id: '/sales',
@@ -58,6 +59,11 @@ const PracticeIndexRoute = PracticeIndexRouteImport.update({
   path: '/',
   getParentRoute: () => PracticeRoute,
 } as any)
+const PracticeGroupIdModeRoute = PracticeGroupIdModeRouteImport.update({
+  id: '/$groupId/$mode',
+  path: '/$groupId/$mode',
+  getParentRoute: () => PracticeRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -68,6 +74,7 @@ export interface FileRoutesByFullPath {
   '/ranking': typeof RankingRoute
   '/sales': typeof SalesRoute
   '/practice/': typeof PracticeIndexRoute
+  '/practice/$groupId/$mode': typeof PracticeGroupIdModeRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -77,6 +84,7 @@ export interface FileRoutesByTo {
   '/ranking': typeof RankingRoute
   '/sales': typeof SalesRoute
   '/practice': typeof PracticeIndexRoute
+  '/practice/$groupId/$mode': typeof PracticeGroupIdModeRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -88,6 +96,7 @@ export interface FileRoutesById {
   '/ranking': typeof RankingRoute
   '/sales': typeof SalesRoute
   '/practice/': typeof PracticeIndexRoute
+  '/practice/$groupId/$mode': typeof PracticeGroupIdModeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -100,6 +109,7 @@ export interface FileRouteTypes {
     | '/ranking'
     | '/sales'
     | '/practice/'
+    | '/practice/$groupId/$mode'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -109,6 +119,7 @@ export interface FileRouteTypes {
     | '/ranking'
     | '/sales'
     | '/practice'
+    | '/practice/$groupId/$mode'
   id:
     | '__root__'
     | '/'
@@ -119,6 +130,7 @@ export interface FileRouteTypes {
     | '/ranking'
     | '/sales'
     | '/practice/'
+    | '/practice/$groupId/$mode'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -189,15 +201,24 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PracticeIndexRouteImport
       parentRoute: typeof PracticeRoute
     }
+    '/practice/$groupId/$mode': {
+      id: '/practice/$groupId/$mode'
+      path: '/$groupId/$mode'
+      fullPath: '/practice/$groupId/$mode'
+      preLoaderRoute: typeof PracticeGroupIdModeRouteImport
+      parentRoute: typeof PracticeRoute
+    }
   }
 }
 
 interface PracticeRouteChildren {
   PracticeIndexRoute: typeof PracticeIndexRoute
+  PracticeGroupIdModeRoute: typeof PracticeGroupIdModeRoute
 }
 
 const PracticeRouteChildren: PracticeRouteChildren = {
   PracticeIndexRoute: PracticeIndexRoute,
+  PracticeGroupIdModeRoute: PracticeGroupIdModeRoute,
 }
 
 const PracticeRouteWithChildren = PracticeRoute._addFileChildren(
