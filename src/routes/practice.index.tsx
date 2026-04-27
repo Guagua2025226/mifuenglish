@@ -29,7 +29,7 @@ function PracticeIndex() {
     setDownloadingId(groupId);
     try {
       const blob = await buildGroupDoc(grp);
-      downloadBlob(blob, `米赋AI-${grp.name}-练习包.docx`);
+      downloadBlob(blob, `米赋AI-${grp.name}-练习包.doc`);
       toast.success("下载完成！");
     } catch (e: any) {
       toast.error("生成失败：" + (e?.message ?? "未知错误"));
