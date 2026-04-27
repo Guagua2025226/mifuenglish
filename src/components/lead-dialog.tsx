@@ -119,25 +119,47 @@ export function LeadDialog({ open, onOpenChange, coach }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+      <DialogContent className={submitted ? "max-w-3xl max-h-[92vh] overflow-y-auto" : "max-w-md max-h-[90vh] overflow-y-auto"}>
         {!coach ? null : submitted ? (
           <>
             <DialogHeader>
-              <DialogTitle className="text-gradient-gold">🎁 免费学情诊断报告</DialogTitle>
+              <DialogTitle className="text-gradient-gold text-2xl">🎁 报名成功 · 专属顾问已为您匹配</DialogTitle>
               <DialogDescription>
-                报名成功！扫描下方二维码，立即领取一份<span className="text-gold font-semibold">全方位学情诊断报告</span>，
-                顾问将通过邮箱与电话与您联系。
+                请<span className="text-gold font-semibold">添加您的专属顾问</span>，并扫描右侧二维码免费领取一份
+                <span className="text-gold font-semibold">全方位学情诊断报告</span>。
               </DialogDescription>
             </DialogHeader>
-            <div className="flex flex-col items-center">
-              <img
-                src={diagnosisQR}
-                alt="米赋AI云校 学生综合测评问卷 二维码"
-                className="rounded-xl w-full max-w-xs border border-border"
-              />
-              <p className="mt-3 text-center text-xs text-muted-foreground">
-                打开手机微信「扫一扫」即可填写测评问卷
-              </p>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {/* 左：顾问名片 */}
+              <div className="rounded-xl border border-border bg-card p-4 flex flex-col items-center">
+                <div className="text-xs text-muted-foreground">您的专属课程顾问</div>
+                <div className="mt-1 text-3xl font-extrabold text-gradient-gold tracking-wide">
+                  {SALES_QR[assignedSalesId].name} 老师
+                </div>
+                <div className="mt-1 text-xs text-muted-foreground">{SALES_QR[assignedSalesId].company}</div>
+                <img
+                  src={SALES_QR[assignedSalesId].qr}
+                  alt={`${SALES_QR[assignedSalesId].name} 企业微信二维码`}
+                  className="mt-3 w-full max-w-[260px] rounded-lg border border-border"
+                />
+                <p className="mt-2 text-center text-xs text-muted-foreground">
+                  微信「扫一扫」添加顾问企业微信
+                </p>
+              </div>
+              {/* 右：学情诊断 */}
+              <div className="rounded-xl border border-border bg-card p-4 flex flex-col items-center">
+                <div className="text-xs text-muted-foreground">免费领取</div>
+                <div className="mt-1 text-xl font-bold text-gold">全方位学情诊断报告</div>
+                <div className="mt-1 text-xs text-muted-foreground">米赋AI云校 学生综合测评</div>
+                <img
+                  src={diagnosisQR}
+                  alt="米赋AI云校 学生综合测评问卷 二维码"
+                  className="mt-3 w-full max-w-[260px] rounded-lg border border-border"
+                />
+                <p className="mt-2 text-center text-xs text-muted-foreground">
+                  微信「扫一扫」填写测评问卷，1 个工作日内出报告
+                </p>
+              </div>
             </div>
             <Button variant="outline" onClick={() => handleClose(false)}>完成</Button>
           </>
