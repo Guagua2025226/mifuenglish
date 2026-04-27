@@ -62,12 +62,6 @@ function RootComponent() {
             © 北京米赋教育科技有限公司 · 米赋AI教育 · AI+教练 双师系统创导者
           </footer>
         </div>
-        <Link
-          to="/sales"
-          className="fixed bottom-5 right-5 z-50 inline-flex items-center gap-1.5 rounded-full border border-gold/40 bg-background/80 backdrop-blur-md px-4 py-2 text-xs font-semibold text-gold shadow-lg hover:bg-gold/10 transition"
-        >
-          🔐 顾问后台
-        </Link>
         <Toaster />
       </StudentProvider>
     </QueryClientProvider>
