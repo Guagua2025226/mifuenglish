@@ -47,6 +47,7 @@ export type Database = {
           coach_id: string
           coach_name: string
           created_at: string
+          email: string | null
           id: string
           mbti: string | null
           parent_name: string
@@ -60,6 +61,7 @@ export type Database = {
           coach_id: string
           coach_name: string
           created_at?: string
+          email?: string | null
           id?: string
           mbti?: string | null
           parent_name: string
@@ -73,6 +75,7 @@ export type Database = {
           coach_id?: string
           coach_name?: string
           created_at?: string
+          email?: string | null
           id?: string
           mbti?: string | null
           parent_name?: string
