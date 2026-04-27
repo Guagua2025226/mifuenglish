@@ -52,6 +52,7 @@ export function LeadDialog({ open, onOpenChange, coach }: Props) {
   const [mbti, setMbti] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [assignedSalesId, setAssignedSalesId] = useState<string>("lijing");
 
   const reset = () => {
     setParentName(""); setPhone(""); setEmail(""); setSubject("英语");
