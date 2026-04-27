@@ -112,6 +112,7 @@ export function LeadDialog({ open, onOpenChange, coach }: Props) {
     }).catch((e) => console.error("邮件通知失败：", e));
 
     setLoading(false);
+    setAssignedSalesId(sales.id);
     setSubmitted(true);
     toast.success("报名成功！请扫码领取学情诊断报告");
   };
