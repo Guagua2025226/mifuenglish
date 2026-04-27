@@ -39,17 +39,18 @@ export const notifySalesByEmail = createServerFn({ method: "POST" })
   <p style="color:#666; font-size:12px; margin-top:20px;">请尽快通过电话/微信回访该家长。</p>
 </div>`;
 
-      // 通过 Supabase pgmq 队列入队（如已配置 Lovable Emails 基础设施）
+      // 通过 Supabase pgmq 队列入队（需先在 Cloud → Emails 配置发件域名）
+      const client = supabaseAdmin as any;
       for (const to of SALES_RECIPIENTS) {
-        await supabaseAdmin.rpc("enqueue_email", {
+        await client.rpc("enqueue_email", {
           queue_name: "transactional_emails",
           message: {
             to,
             subject: `【米赋报名】${data.parent_name} · ${data.subject} · ${data.coach_name}`,
             html,
             template_name: "sales_lead_notification",
-          } as any,
-        } as any);
+          },
+        });
       }
       return { ok: true as const };
     } catch (err) {
