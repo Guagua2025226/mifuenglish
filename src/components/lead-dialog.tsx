@@ -10,6 +10,13 @@ import { useStudent } from "@/lib/student-context";
 import type { Coach } from "@/lib/coaches";
 import { notifySalesByEmail } from "@/lib/notify-sales.functions";
 import diagnosisQR from "@/assets/diagnosis-qrcode.jpg";
+import qrLijing from "@/assets/qr-lijing.jpg";
+import qrZheng from "@/assets/qr-zhengjiabao.jpg";
+
+const SALES_QR: Record<string, { name: string; company: string; qr: string }> = {
+  lijing: { name: "李晶", company: "北京米赋教育科技有限公司", qr: qrLijing },
+  zhengjiabao: { name: "郑家宝", company: "北京米赋教育科技有限公司", qr: qrZheng },
+};
 
 const SUBJECTS = ["英语", "数学", "语文", "物理", "化学", "全科"] as const;
 const SCORES = ["90+", "80–90", "70–80", "60–70", "60 以下"] as const;
