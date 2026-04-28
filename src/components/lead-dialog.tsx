@@ -8,7 +8,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { pickRandomSales } from "@/lib/sales";
 import { useStudent } from "@/lib/student-context";
 import type { Coach } from "@/lib/coaches";
-import { notifySalesByEmail } from "@/lib/notify-sales.functions";
 import diagnosisQR from "@/assets/diagnosis-qrcode.jpg";
 import qrLijing from "@/assets/qr-lijing.jpg";
 import qrZheng from "@/assets/qr-zhengjiabao.jpg";
