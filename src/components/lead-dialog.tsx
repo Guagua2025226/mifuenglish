@@ -97,28 +97,28 @@ export function LeadDialog({ open, onOpenChange, coach }: Props) {
       return;
     }
 
-    // 异步通知顾问邮箱（失败不影响 leads 保存体验）
+    // 通知顾问邮箱（失败不影响 leads 保存体验）
     let mailOk = true;
     try {
-      const { data: notifyRes, error: notifyErr } = await supabase.functions.invoke(
-        "notify-sales",
-        {
-          body: {
-            parent_name: parsed.data.parent_name,
-            phone: parsed.data.phone,
-            email: parsed.data.email,
-            subject: parsed.data.subject,
-            score_range: parsed.data.score_range,
-            mbti: parsed.data.mbti ?? null,
-            coach_name: coach.name,
-            assigned_sales: sales.id,
-            submitted_at: new Date().toISOString(),
-          },
-        }
-      );
-      if (notifyErr || !notifyRes?.ok) {
+      const resp = await fetch("/api/public/notify-sales", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          parent_name: parsed.data.parent_name,
+          phone: parsed.data.phone,
+          email: parsed.data.email,
+          subject: parsed.data.subject,
+          score_range: parsed.data.score_range,
+          mbti: parsed.data.mbti ?? null,
+          coach_name: coach.name,
+          assigned_sales: sales.id,
+          submitted_at: new Date().toISOString(),
+        }),
+      });
+      const json = await resp.json().catch(() => ({}));
+      if (!resp.ok || !json?.ok) {
         mailOk = false;
-        console.error("邮件通知失败:", notifyErr ?? notifyRes);
+        console.error("邮件通知失败:", resp.status, json);
       }
     } catch (e) {
       mailOk = false;
