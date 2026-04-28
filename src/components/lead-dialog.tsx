@@ -98,23 +98,36 @@ export function LeadDialog({ open, onOpenChange, coach }: Props) {
       return;
     }
 
-    // 异步通知顾问邮箱（失败不影响用户体验）
-    notifySalesByEmail({
-      data: {
-        parent_name: parsed.data.parent_name,
-        phone: parsed.data.phone,
-        email: parsed.data.email,
-        subject: parsed.data.subject,
-        score_range: parsed.data.score_range,
-        mbti: parsed.data.mbti ?? null,
-        coach_name: coach.name,
-      },
-    }).catch((e) => console.error("邮件通知失败：", e));
+    let emailSent = false;
+    try {
+      const notifyResult = await notifySalesByEmail({
+        data: {
+          parent_name: parsed.data.parent_name,
+          phone: parsed.data.phone,
+          email: parsed.data.email,
+          subject: parsed.data.subject,
+          score_range: parsed.data.score_range,
+          mbti: parsed.data.mbti ?? null,
+          coach_name: coach.name,
+          assigned_sales: sales.name,
+        },
+      });
+      emailSent = notifyResult.ok;
+      if (!notifyResult.ok) {
+        console.error("邮件通知失败：", notifyResult);
+      }
+    } catch (e) {
+      console.error("邮件通知失败：", e);
+    }
 
     setLoading(false);
     setAssignedSalesId(sales.id);
     setSubmitted(true);
-    toast.success("报名成功！请扫码领取学情诊断报告");
+    if (emailSent) {
+      toast.success("报名成功！请扫码领取学情诊断报告");
+    } else {
+      toast.warning("报名已保存，邮件通知暂未发送，请稍后人工确认");
+    }
   };
 
   return (
