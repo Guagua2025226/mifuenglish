@@ -8,7 +8,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { pickRandomSales } from "@/lib/sales";
 import { useStudent } from "@/lib/student-context";
 import type { Coach } from "@/lib/coaches";
-import { notifySalesByEmail } from "@/lib/notify-sales.functions";
 import diagnosisQR from "@/assets/diagnosis-qrcode.jpg";
 import qrLijing from "@/assets/qr-lijing.jpg";
 import qrZheng from "@/assets/qr-zhengjiabao.jpg";
@@ -98,23 +97,42 @@ export function LeadDialog({ open, onOpenChange, coach }: Props) {
       return;
     }
 
-    // 异步通知顾问邮箱（失败不影响用户体验）
-    notifySalesByEmail({
-      data: {
-        parent_name: parsed.data.parent_name,
-        phone: parsed.data.phone,
-        email: parsed.data.email,
-        subject: parsed.data.subject,
-        score_range: parsed.data.score_range,
-        mbti: parsed.data.mbti ?? null,
-        coach_name: coach.name,
-      },
-    }).catch((e) => console.error("邮件通知失败：", e));
+    // 异步通知顾问邮箱（失败不影响 leads 保存体验）
+    let mailOk = true;
+    try {
+      const { data: notifyRes, error: notifyErr } = await supabase.functions.invoke(
+        "notify-sales",
+        {
+          body: {
+            parent_name: parsed.data.parent_name,
+            phone: parsed.data.phone,
+            email: parsed.data.email,
+            subject: parsed.data.subject,
+            score_range: parsed.data.score_range,
+            mbti: parsed.data.mbti ?? null,
+            coach_name: coach.name,
+            assigned_sales: sales.id,
+            submitted_at: new Date().toISOString(),
+          },
+        }
+      );
+      if (notifyErr || !notifyRes?.ok) {
+        mailOk = false;
+        console.error("邮件通知失败:", notifyErr ?? notifyRes);
+      }
+    } catch (e) {
+      mailOk = false;
+      console.error("邮件通知异常:", e);
+    }
 
     setLoading(false);
     setAssignedSalesId(sales.id);
     setSubmitted(true);
-    toast.success("报名成功！请扫码领取学情诊断报告");
+    if (mailOk) {
+      toast.success("报名成功！请扫码领取学情诊断报告");
+    } else {
+      toast.warning("报名已保存，邮件通知暂未发送");
+    }
   };
 
   return (
