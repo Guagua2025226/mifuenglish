@@ -17,6 +17,7 @@ import { Route as CoachesRouteImport } from './routes/coaches'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PracticeIndexRouteImport } from './routes/practice.index'
 import { Route as PracticeGroupIdModeRouteImport } from './routes/practice.$groupId.$mode'
+import { Route as ApiPublicNotifySalesRouteImport } from './routes/api.public.notify-sales'
 
 const RankingRoute = RankingRouteImport.update({
   id: '/ranking',
@@ -58,6 +59,11 @@ const PracticeGroupIdModeRoute = PracticeGroupIdModeRouteImport.update({
   path: '/$groupId/$mode',
   getParentRoute: () => PracticeRoute,
 } as any)
+const ApiPublicNotifySalesRoute = ApiPublicNotifySalesRouteImport.update({
+  id: '/api/public/notify-sales',
+  path: '/api/public/notify-sales',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -67,6 +73,7 @@ export interface FileRoutesByFullPath {
   '/practice': typeof PracticeRouteWithChildren
   '/ranking': typeof RankingRoute
   '/practice/': typeof PracticeIndexRoute
+  '/api/public/notify-sales': typeof ApiPublicNotifySalesRoute
   '/practice/$groupId/$mode': typeof PracticeGroupIdModeRoute
 }
 export interface FileRoutesByTo {
@@ -76,6 +83,7 @@ export interface FileRoutesByTo {
   '/join': typeof JoinRoute
   '/ranking': typeof RankingRoute
   '/practice': typeof PracticeIndexRoute
+  '/api/public/notify-sales': typeof ApiPublicNotifySalesRoute
   '/practice/$groupId/$mode': typeof PracticeGroupIdModeRoute
 }
 export interface FileRoutesById {
@@ -87,6 +95,7 @@ export interface FileRoutesById {
   '/practice': typeof PracticeRouteWithChildren
   '/ranking': typeof RankingRoute
   '/practice/': typeof PracticeIndexRoute
+  '/api/public/notify-sales': typeof ApiPublicNotifySalesRoute
   '/practice/$groupId/$mode': typeof PracticeGroupIdModeRoute
 }
 export interface FileRouteTypes {
@@ -99,6 +108,7 @@ export interface FileRouteTypes {
     | '/practice'
     | '/ranking'
     | '/practice/'
+    | '/api/public/notify-sales'
     | '/practice/$groupId/$mode'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -108,6 +118,7 @@ export interface FileRouteTypes {
     | '/join'
     | '/ranking'
     | '/practice'
+    | '/api/public/notify-sales'
     | '/practice/$groupId/$mode'
   id:
     | '__root__'
@@ -118,6 +129,7 @@ export interface FileRouteTypes {
     | '/practice'
     | '/ranking'
     | '/practice/'
+    | '/api/public/notify-sales'
     | '/practice/$groupId/$mode'
   fileRoutesById: FileRoutesById
 }
@@ -128,6 +140,7 @@ export interface RootRouteChildren {
   JoinRoute: typeof JoinRoute
   PracticeRoute: typeof PracticeRouteWithChildren
   RankingRoute: typeof RankingRoute
+  ApiPublicNotifySalesRoute: typeof ApiPublicNotifySalesRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -188,6 +201,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PracticeGroupIdModeRouteImport
       parentRoute: typeof PracticeRoute
     }
+    '/api/public/notify-sales': {
+      id: '/api/public/notify-sales'
+      path: '/api/public/notify-sales'
+      fullPath: '/api/public/notify-sales'
+      preLoaderRoute: typeof ApiPublicNotifySalesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -212,6 +232,7 @@ const rootRouteChildren: RootRouteChildren = {
   JoinRoute: JoinRoute,
   PracticeRoute: PracticeRouteWithChildren,
   RankingRoute: RankingRoute,
+  ApiPublicNotifySalesRoute: ApiPublicNotifySalesRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
