@@ -8,6 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { VOCAB_GROUPS, type VocabWord } from "@/lib/word-groups";
 import { PRACTICE_MODES, markModeDone, getGroupProgress, type ModeId } from "@/lib/practice-progress";
+import { filterApplicable } from "@/lib/mode-applicability";
 
 export const Route = createFileRoute("/practice/$groupId/$mode")({
   component: PracticeMode,
@@ -55,7 +56,29 @@ function PracticeMode() {
     );
   }
 
-  const words = group.words;
+  // AI 题型仅对适用单词出题（短词/词组不做词性转换、词根词缀等）
+  const aiModes: ModeId[] = ["pos", "root", "cloze"];
+  const words = aiModes.includes(mode as ModeId)
+    ? filterApplicable(group.words, mode as ModeId)
+    : group.words;
+
+  // 该词组没有适合此模式的单词 → 自动标记完成并提示
+  if (words.length === 0) {
+    if (!savedRef.current) {
+      savedRef.current = true;
+      markModeDone(groupIdNum, mode as ModeId);
+    }
+    return (
+      <div className="mx-auto max-w-xl px-4 py-12 text-center">
+        <div className="glass-card rounded-2xl p-8">
+          <div className="text-5xl mb-3">⏭️</div>
+          <h2 className="text-xl font-bold text-gradient-gold">该词组没有适合「{MODE_NAME(mode)}」的单词</h2>
+          <p className="mt-2 text-muted-foreground text-sm">已自动跳过本环节</p>
+          <Link to="/practice"><Button className="mt-6">返回练习中心</Button></Link>
+        </div>
+      </div>
+    );
+  }
 
   if (idx >= words.length) {
     const score = studied > 0 ? Math.round((correctCount / studied) * 100) : 0;
