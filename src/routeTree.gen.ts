@@ -14,9 +14,11 @@ import { Route as PracticeRouteImport } from './routes/practice'
 import { Route as JoinRouteImport } from './routes/join'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CoachesRouteImport } from './routes/coaches'
+import { Route as CoachRouteImport } from './routes/coach'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PracticeIndexRouteImport } from './routes/practice.index'
+import { Route as CoachLoginRouteImport } from './routes/coach.login'
 import { Route as PracticeGroupIdModeRouteImport } from './routes/practice.$groupId.$mode'
 import { Route as ApiPublicNotifySalesRouteImport } from './routes/api.public.notify-sales'
 
@@ -45,6 +47,11 @@ const CoachesRoute = CoachesRouteImport.update({
   path: '/coaches',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CoachRoute = CoachRouteImport.update({
+  id: '/coach',
+  path: '/coach',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminRoute = AdminRouteImport.update({
   id: '/admin',
   path: '/admin',
@@ -60,6 +67,11 @@ const PracticeIndexRoute = PracticeIndexRouteImport.update({
   path: '/',
   getParentRoute: () => PracticeRoute,
 } as any)
+const CoachLoginRoute = CoachLoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => CoachRoute,
+} as any)
 const PracticeGroupIdModeRoute = PracticeGroupIdModeRouteImport.update({
   id: '/$groupId/$mode',
   path: '/$groupId/$mode',
@@ -74,11 +86,13 @@ const ApiPublicNotifySalesRoute = ApiPublicNotifySalesRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/coach': typeof CoachRouteWithChildren
   '/coaches': typeof CoachesRoute
   '/dashboard': typeof DashboardRoute
   '/join': typeof JoinRoute
   '/practice': typeof PracticeRouteWithChildren
   '/ranking': typeof RankingRoute
+  '/coach/login': typeof CoachLoginRoute
   '/practice/': typeof PracticeIndexRoute
   '/api/public/notify-sales': typeof ApiPublicNotifySalesRoute
   '/practice/$groupId/$mode': typeof PracticeGroupIdModeRoute
@@ -86,10 +100,12 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/coach': typeof CoachRouteWithChildren
   '/coaches': typeof CoachesRoute
   '/dashboard': typeof DashboardRoute
   '/join': typeof JoinRoute
   '/ranking': typeof RankingRoute
+  '/coach/login': typeof CoachLoginRoute
   '/practice': typeof PracticeIndexRoute
   '/api/public/notify-sales': typeof ApiPublicNotifySalesRoute
   '/practice/$groupId/$mode': typeof PracticeGroupIdModeRoute
@@ -98,11 +114,13 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/coach': typeof CoachRouteWithChildren
   '/coaches': typeof CoachesRoute
   '/dashboard': typeof DashboardRoute
   '/join': typeof JoinRoute
   '/practice': typeof PracticeRouteWithChildren
   '/ranking': typeof RankingRoute
+  '/coach/login': typeof CoachLoginRoute
   '/practice/': typeof PracticeIndexRoute
   '/api/public/notify-sales': typeof ApiPublicNotifySalesRoute
   '/practice/$groupId/$mode': typeof PracticeGroupIdModeRoute
@@ -112,11 +130,13 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/admin'
+    | '/coach'
     | '/coaches'
     | '/dashboard'
     | '/join'
     | '/practice'
     | '/ranking'
+    | '/coach/login'
     | '/practice/'
     | '/api/public/notify-sales'
     | '/practice/$groupId/$mode'
@@ -124,10 +144,12 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/admin'
+    | '/coach'
     | '/coaches'
     | '/dashboard'
     | '/join'
     | '/ranking'
+    | '/coach/login'
     | '/practice'
     | '/api/public/notify-sales'
     | '/practice/$groupId/$mode'
@@ -135,11 +157,13 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/admin'
+    | '/coach'
     | '/coaches'
     | '/dashboard'
     | '/join'
     | '/practice'
     | '/ranking'
+    | '/coach/login'
     | '/practice/'
     | '/api/public/notify-sales'
     | '/practice/$groupId/$mode'
@@ -148,6 +172,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
+  CoachRoute: typeof CoachRouteWithChildren
   CoachesRoute: typeof CoachesRoute
   DashboardRoute: typeof DashboardRoute
   JoinRoute: typeof JoinRoute
@@ -193,6 +218,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CoachesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/coach': {
+      id: '/coach'
+      path: '/coach'
+      fullPath: '/coach'
+      preLoaderRoute: typeof CoachRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin': {
       id: '/admin'
       path: '/admin'
@@ -214,6 +246,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PracticeIndexRouteImport
       parentRoute: typeof PracticeRoute
     }
+    '/coach/login': {
+      id: '/coach/login'
+      path: '/login'
+      fullPath: '/coach/login'
+      preLoaderRoute: typeof CoachLoginRouteImport
+      parentRoute: typeof CoachRoute
+    }
     '/practice/$groupId/$mode': {
       id: '/practice/$groupId/$mode'
       path: '/$groupId/$mode'
@@ -230,6 +269,16 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface CoachRouteChildren {
+  CoachLoginRoute: typeof CoachLoginRoute
+}
+
+const CoachRouteChildren: CoachRouteChildren = {
+  CoachLoginRoute: CoachLoginRoute,
+}
+
+const CoachRouteWithChildren = CoachRoute._addFileChildren(CoachRouteChildren)
 
 interface PracticeRouteChildren {
   PracticeIndexRoute: typeof PracticeIndexRoute
@@ -248,6 +297,7 @@ const PracticeRouteWithChildren = PracticeRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
+  CoachRoute: CoachRouteWithChildren,
   CoachesRoute: CoachesRoute,
   DashboardRoute: DashboardRoute,
   JoinRoute: JoinRoute,
