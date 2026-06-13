@@ -14,6 +14,247 @@ export type Database = {
   }
   public: {
     Tables: {
+      bookings: {
+        Row: {
+          assigned_sales: string | null
+          coach_id: string
+          confirmed_at: string | null
+          created_at: string
+          deadline_at: string
+          duration_minutes: number
+          id: string
+          mbti: string | null
+          notes: string | null
+          parent_email: string | null
+          parent_name: string
+          parent_phone: string
+          reassigned_from_coach_id: string | null
+          scheduled_date: string
+          scheduled_start_hour: number
+          score_range: string | null
+          status: Database["public"]["Enums"]["booking_status"]
+          student_id: string | null
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_sales?: string | null
+          coach_id: string
+          confirmed_at?: string | null
+          created_at?: string
+          deadline_at?: string
+          duration_minutes: number
+          id?: string
+          mbti?: string | null
+          notes?: string | null
+          parent_email?: string | null
+          parent_name: string
+          parent_phone: string
+          reassigned_from_coach_id?: string | null
+          scheduled_date: string
+          scheduled_start_hour: number
+          score_range?: string | null
+          status?: Database["public"]["Enums"]["booking_status"]
+          student_id?: string | null
+          subject: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_sales?: string | null
+          coach_id?: string
+          confirmed_at?: string | null
+          created_at?: string
+          deadline_at?: string
+          duration_minutes?: number
+          id?: string
+          mbti?: string | null
+          notes?: string | null
+          parent_email?: string | null
+          parent_name?: string
+          parent_phone?: string
+          reassigned_from_coach_id?: string | null
+          scheduled_date?: string
+          scheduled_start_hour?: number
+          score_range?: string | null
+          status?: Database["public"]["Enums"]["booking_status"]
+          student_id?: string | null
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookings_coach_id_fkey"
+            columns: ["coach_id"]
+            isOneToOne: false
+            referencedRelation: "coaches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_reassigned_from_coach_id_fkey"
+            columns: ["reassigned_from_coach_id"]
+            isOneToOne: false
+            referencedRelation: "coaches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      coach_availability: {
+        Row: {
+          coach_id: string
+          created_at: string
+          end_hour: number
+          id: string
+          start_hour: number
+          weekday: number
+        }
+        Insert: {
+          coach_id: string
+          created_at?: string
+          end_hour: number
+          id?: string
+          start_hour: number
+          weekday: number
+        }
+        Update: {
+          coach_id?: string
+          created_at?: string
+          end_hour?: number
+          id?: string
+          start_hour?: number
+          weekday?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coach_availability_coach_id_fkey"
+            columns: ["coach_id"]
+            isOneToOne: false
+            referencedRelation: "coaches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      coach_time_off: {
+        Row: {
+          coach_id: string
+          created_at: string
+          end_hour: number | null
+          id: string
+          off_date: string
+          reason: string | null
+          start_hour: number | null
+        }
+        Insert: {
+          coach_id: string
+          created_at?: string
+          end_hour?: number | null
+          id?: string
+          off_date: string
+          reason?: string | null
+          start_hour?: number | null
+        }
+        Update: {
+          coach_id?: string
+          created_at?: string
+          end_hour?: number | null
+          id?: string
+          off_date?: string
+          reason?: string | null
+          start_hour?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coach_time_off_coach_id_fkey"
+            columns: ["coach_id"]
+            isOneToOne: false
+            referencedRelation: "coaches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      coach_whitelist: {
+        Row: {
+          created_at: string
+          note: string | null
+          phone: string
+          suggested_name: string | null
+          suggested_subject: string | null
+        }
+        Insert: {
+          created_at?: string
+          note?: string | null
+          phone: string
+          suggested_name?: string | null
+          suggested_subject?: string | null
+        }
+        Update: {
+          created_at?: string
+          note?: string | null
+          phone?: string
+          suggested_name?: string | null
+          suggested_subject?: string | null
+        }
+        Relationships: []
+      }
+      coaches: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          created_at: string
+          display_order: number
+          en_name: string | null
+          features: Json | null
+          highlights: Json | null
+          id: string
+          mbti: string | null
+          name: string
+          phone: string | null
+          status: Database["public"]["Enums"]["coach_status"]
+          subject: string | null
+          title: string | null
+          updated_at: string
+          user_id: string | null
+          years_experience: number | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          display_order?: number
+          en_name?: string | null
+          features?: Json | null
+          highlights?: Json | null
+          id: string
+          mbti?: string | null
+          name: string
+          phone?: string | null
+          status?: Database["public"]["Enums"]["coach_status"]
+          subject?: string | null
+          title?: string | null
+          updated_at?: string
+          user_id?: string | null
+          years_experience?: number | null
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          display_order?: number
+          en_name?: string | null
+          features?: Json | null
+          highlights?: Json | null
+          id?: string
+          mbti?: string | null
+          name?: string
+          phone?: string | null
+          status?: Database["public"]["Enums"]["coach_status"]
+          subject?: string | null
+          title?: string | null
+          updated_at?: string
+          user_id?: string | null
+          years_experience?: number | null
+        }
+        Relationships: []
+      }
       daily_checkin: {
         Row: {
           checkin_date: string
@@ -245,7 +486,14 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      booking_status:
+        | "pending"
+        | "confirmed"
+        | "rejected"
+        | "timeout"
+        | "reassigned"
+        | "cancelled"
+      coach_status: "pending" | "approved" | "rejected" | "disabled"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -372,6 +620,16 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      booking_status: [
+        "pending",
+        "confirmed",
+        "rejected",
+        "timeout",
+        "reassigned",
+        "cancelled",
+      ],
+      coach_status: ["pending", "approved", "rejected", "disabled"],
+    },
   },
 } as const
